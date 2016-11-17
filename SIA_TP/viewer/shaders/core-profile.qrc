@@ -20,5 +20,7 @@
 	<file>shadow.vert</file> 
 	<file>normalMapping.frag</file>
 	<file>normalMapping.vert</file>
+	<file>marbre.vert</file>
+	<file>marbre.frag</file>
     </qresource>
 </RCC>

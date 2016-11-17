@@ -233,42 +233,22 @@ vec3 perlinNoise(in vec3 v) {
     return val;
 }
 
-vec4 interpolation_wood() {
-	vec3 wood1 = vec3(0.35,0.2,0.06); 
-	vec3 wood2 = vec3(0.19,0.12,0.01);
 
-	float dist = sqrt(pow((vertPos.x),2) + pow((vertPos.z),2)) ; //axe vertical passant par (0,0,0) ; 
+vec4 interpolation_bleu() {
 
-	vec4 vec_noise = vec4(0.5 + 0.5 * perlinNoise(vec3(dist, dist, dist)), 1.0);
-	float noise = vec_noise.r ;
+	vec4 vec_noise = vec4(0.5 + 0.5 * perlinNoise(vertPos.xyz/radius), 1.0);
+	float noise = vec_noise.x ; 
+	vec3 pale_blue = vec3(0.25, 0.25, 0.35); 
+   	vec3 dark_blue = vec3(0.10, 0.10, 0.20) ;
 
-	vec4 color = vec4(mix(wood1, wood2, noise),1.0);
+	vec4 color = vec4(mix(pale_blue, dark_blue, noise),1.0);
 
-	
-	//PHONG
- 	vec4 normNormals = vec4(normalize(vertNormal),1.0) ;
-        vec4 normLightVector = normalize(lightVector) ; 
-        vec4 normEyeVector = normalize(eyeVector) ; 
-
-  	vec4 ambiant = 0.2 * color * lightIntensity ;
-	vec4 diffuse = 0.4 * color * max(dot(normNormals,normLightVector), 0) * lightIntensity;
-	vec4 vecH = normalize(normEyeVector + normLightVector);  
-	vec4 specular = noise * color * pow(max(dot(normNormals, vecH), 0),4*shininess) * lightIntensity ; 
-
-	//Fresnel 
-	float Fo = pow((1 - eta),2)/pow((1+eta),2) ; 
-	float Fresnel = Fo + (1 - Fo)*pow((1 - dot(vecH,normEyeVector)),5) ; 
-
-
-	return ambiant + diffuse + specular ; 
+	return color ; 
 }
 
 void main( void )
-{
+{  
+    vec4 color = interpolation_bleu() ; 
 
-   
-    vec4 color = interpolation_wood() ; 
-
-
-    fragColor = color ; // vec4(0.5 + 0.5 * perlinNoise(vertPos.xyz/radius), 1.0);
+    fragColor = color ; 
 }
