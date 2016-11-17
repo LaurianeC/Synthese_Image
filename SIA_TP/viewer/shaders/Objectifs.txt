@@ -1,0 +1,30 @@
+Objectifs et évolution du projet à mettre à jour le plus régulièrement possible pour éviter les doublons. 
+
+NB : quand on créer une nouveau shader il faut l'ajouter à la liste dans le fichier "core-profile.qrc"
+
+
+1) Texture / Bump / Normal Mapping 
+
+Obligatoire : 
+Textures Bitmaps (ok) --> shader "3_textured.frag" couplé avec Phong 
+Normal Mapping 
+Textures procédurales à base de bruit de Perlin 
+
+Optionnel : 
+Wood spéculaire (ok Lauriane) --> shader "wood"
+
+2) Ombres 
+
+Obligatoire : 
+Shadow Mapping (ok) --> shader "shadow" 
+
+3) Environment Mapping 
+
+Obligatoire : 
+Environment mapping avec coefficient de Fresnel (TODO) 
+
+4) Matériaux 
+
+5) Monte-Carlo sampling 
+
+6) Modélisation 
