@@ -33,7 +33,7 @@ MOVE          = mv -f
 TAR           = tar -cf
 COMPRESS      = gzip -9f
 DISTNAME      = myViewer1.0.0
-DISTDIR = /user/0/.base/chilaudl/home/Documents/Synthese_Image/SIA_TP/viewer/.tmp/myViewer1.0.0
+DISTDIR = /user/8/.base/bourjotm/home/Desktop/Projet_SIA/SIA_TP/viewer/.tmp/myViewer1.0.0
 LINK          = g++
 LFLAGS        = -Wno-unknown-pragmas -fopenmp -Wl,-O1 -Wl,-z,relro
 LIBS          = $(SUBLIBS) -L../../SIA_TP/trimesh2/lib -ltrimesh -lQt5OpenGL -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread 
@@ -535,6 +535,7 @@ qrc_core-profile.cpp: shaders/core-profile.qrc \
 		shaders/4_earth.frag \
 		shaders/3_textured.vert \
 		shaders/shadow.frag \
+		shaders/marbre.vert \
 		shaders/1_simple.frag \
 		shaders/5_envMap.frag \
 		shaders/h_shadowMapGeneration.frag \
@@ -544,6 +545,7 @@ qrc_core-profile.cpp: shaders/core-profile.qrc \
 		shaders/3_textured.frag \
 		shaders/4_earth.vert \
 		shaders/noiseAlone.vert \
+		shaders/marbre.frag \
 		shaders/shadow.vert
 	/usr/lib64/qt5/bin/rcc -name core-profile shaders/core-profile.qrc -o qrc_core-profile.cpp
 
@@ -558,7 +560,7 @@ compiler_moc_header_clean:
 	-$(DEL_FILE) moc_openglwindow.cpp moc_glshaderwindow.cpp
 moc_openglwindow.cpp: src/openglwindow.h \
 		moc_predefs.h
-	/usr/lib64/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib64/qt5/mkspecs/linux-g++ -I/user/0/.base/chilaudl/home/Documents/Synthese_Image/SIA_TP/viewer -I/user/0/.base/chilaudl/home/Documents/Synthese_Image/SIA_TP/trimesh2/include -I/usr/include/qt5 -I/usr/include/qt5/QtOpenGL -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtCore -I/usr/include/c++/4.8.5 -I/usr/include/c++/4.8.5/x86_64-redhat-linux -I/usr/include/c++/4.8.5/backward -I/usr/lib/gcc/x86_64-redhat-linux/4.8.5/include -I/usr/local/include -I/usr/include src/openglwindow.h -o moc_openglwindow.cpp
+	/usr/lib64/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib64/qt5/mkspecs/linux-g++ -I/user/8/.base/bourjotm/home/Desktop/Projet_SIA/SIA_TP/viewer -I/user/8/.base/bourjotm/home/Desktop/Projet_SIA/SIA_TP/trimesh2/include -I/usr/include/qt5 -I/usr/include/qt5/QtOpenGL -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtCore -I/usr/include/c++/4.8.5 -I/usr/include/c++/4.8.5/x86_64-redhat-linux -I/usr/include/c++/4.8.5/backward -I/usr/lib/gcc/x86_64-redhat-linux/4.8.5/include -I/usr/local/include -I/usr/include src/openglwindow.h -o moc_openglwindow.cpp
 
 moc_glshaderwindow.cpp: src/openglwindow.h \
 		../trimesh2/include/TriMesh.h \
@@ -568,7 +570,7 @@ moc_glshaderwindow.cpp: src/openglwindow.h \
 		../trimesh2/include/Color.h \
 		src/glshaderwindow.h \
 		moc_predefs.h
-	/usr/lib64/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib64/qt5/mkspecs/linux-g++ -I/user/0/.base/chilaudl/home/Documents/Synthese_Image/SIA_TP/viewer -I/user/0/.base/chilaudl/home/Documents/Synthese_Image/SIA_TP/trimesh2/include -I/usr/include/qt5 -I/usr/include/qt5/QtOpenGL -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtCore -I/usr/include/c++/4.8.5 -I/usr/include/c++/4.8.5/x86_64-redhat-linux -I/usr/include/c++/4.8.5/backward -I/usr/lib/gcc/x86_64-redhat-linux/4.8.5/include -I/usr/local/include -I/usr/include src/glshaderwindow.h -o moc_glshaderwindow.cpp
+	/usr/lib64/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib64/qt5/mkspecs/linux-g++ -I/user/8/.base/bourjotm/home/Desktop/Projet_SIA/SIA_TP/viewer -I/user/8/.base/bourjotm/home/Desktop/Projet_SIA/SIA_TP/trimesh2/include -I/usr/include/qt5 -I/usr/include/qt5/QtOpenGL -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtCore -I/usr/include/c++/4.8.5 -I/usr/include/c++/4.8.5/x86_64-redhat-linux -I/usr/include/c++/4.8.5/backward -I/usr/lib/gcc/x86_64-redhat-linux/4.8.5/include -I/usr/local/include -I/usr/include src/glshaderwindow.h -o moc_glshaderwindow.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
