@@ -22,5 +22,7 @@
 	<file>normalMapping.vert</file>
 	<file>marbre.vert</file>
 	<file>marbre.frag</file>
+	<file>cookTorrence.vert</file>
+	<file>cookTorrence.frag</file>
     </qresource>
 </RCC>

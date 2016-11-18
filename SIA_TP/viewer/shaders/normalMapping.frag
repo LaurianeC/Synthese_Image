@@ -42,7 +42,6 @@ void main( void )
     vec4 normLightVector = normalize(lightVector) ; 
     vec4 normEyeVector = normalize(eyeVector) ; 
 
-    // Here begins the real work.
     vec4 ambiant = 0.2 * vertColor * lightIntensity ;
     vec4 diffuse = 0.4 * vertColor * max(dot(normNormals,normLightVector), 0) * lightIntensity;
     vec4 vecH = normalize(normEyeVector + normLightVector);  
