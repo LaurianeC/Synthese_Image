@@ -917,8 +917,8 @@ void glShaderWindow::render()
         lightCoordMatrix.lookAt(lightPosition, center, QVector3D(0,1,0)) ; 
 	lightPerspective.setToIdentity() ;
 	float radius = modelMesh->bsphere.r ; 
-
-        lightPerspective.perspective(45.0f, 1.0f, 2 * radius, 10 * radius);
+	//lightPerspective.perspective(45.0f,1.0f, (lightDistance-1.0) * modelMesh->bsphere.r, (lightDistance+1.0) * modelMesh->bsphere.r); 
+        lightPerspective.perspective(45.0f, 1.0f, 2.0 * radius, 10.0 * radius);
         shadowMapGenerationProgram->setUniformValue("matrix", lightCoordMatrix);
         shadowMapGenerationProgram->setUniformValue("perspective", lightPerspective);
 
