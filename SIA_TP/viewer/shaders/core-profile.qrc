@@ -24,5 +24,7 @@
 	<file>marbre.frag</file>
 	<file>cookTorrence.vert</file>
 	<file>cookTorrence.frag</file>
+	<file>softshadow.vert</file>
+	<file>softshadow.frag</file>
     </qresource>
 </RCC>
