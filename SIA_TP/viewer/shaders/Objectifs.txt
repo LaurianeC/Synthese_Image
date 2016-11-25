@@ -18,6 +18,9 @@ Wood spéculaire (ok Lauriane) --> shader "wood"
 Obligatoire : 
 Shadow Mapping (ok) --> shader "shadow" 
 
+Optionnel : 
+Soft shadow --> shader "softshadow"
+
 3) Environment Mapping 
 
 Obligatoire : 

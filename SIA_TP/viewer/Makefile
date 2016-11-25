@@ -527,21 +527,25 @@ compiler_rcc_clean:
 qrc_core-profile.cpp: shaders/core-profile.qrc \
 		shaders/5_envMap.vert \
 		shaders/1_simple.vert \
+		shaders/softshadow.vert \
 		shaders/h_shadowMapGeneration.vert \
 		shaders/2_phong.frag \
 		shaders/wood.frag \
 		shaders/normalMapping.frag \
 		shaders/noiseAlone.frag \
 		shaders/4_earth.frag \
+		shaders/cookTorrence.vert \
 		shaders/3_textured.vert \
 		shaders/shadow.frag \
 		shaders/marbre.vert \
 		shaders/1_simple.frag \
 		shaders/5_envMap.frag \
+		shaders/softshadow.frag \
 		shaders/h_shadowMapGeneration.frag \
 		shaders/2_phong.vert \
 		shaders/wood.vert \
 		shaders/normalMapping.vert \
+		shaders/cookTorrence.frag \
 		shaders/3_textured.frag \
 		shaders/4_earth.vert \
 		shaders/noiseAlone.vert \

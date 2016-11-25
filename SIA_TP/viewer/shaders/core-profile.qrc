@@ -26,5 +26,7 @@
 	<file>cookTorrence.frag</file>
 	<file>Gooch.vert</file>
 	<file>Gooch.frag</file>
+	<file>softshadow.vert</file>
+	<file>softshadow.frag</file>
     </qresource>
 </RCC>

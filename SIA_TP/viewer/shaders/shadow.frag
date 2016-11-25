@@ -38,12 +38,13 @@ void main( void )
     vec4 light = ((lightSpace / lightSpace.w)*0.5 ) +0.5  ; 
     light.y = (1 - light.y) ; 
 
-    if (texture(shadowMap, light.xy).z*(1.02) < light.z) {
-	fragColor = ambiant;
-    }
-    else {
-	fragColor = ambiant + diffuse + Fresnel*specular; 
-    }
+    //Bias
+    float bias = max(0.05 * (1.0 - dot(normNormals,normLightVector)), 0.005);  
 
+    if (texture(shadowMap, light.xy).z < light.z-bias) {
+	   fragColor = ambiant;
+    } else {
+      	   fragColor = ambiant + diffuse + Fresnel*specular; 
+    }
    
 }
