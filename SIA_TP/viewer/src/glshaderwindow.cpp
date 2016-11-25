@@ -688,12 +688,12 @@ void glShaderWindow::initialize()
         m_program->release();
         delete(m_program);
     }
-    m_program = prepareShaderProgram(":/1_simple.vert", ":/1_simple.frag");
+    m_program = prepareShaderProgram(":/2_phong.vert", ":/2_phong.frag");
     if (ground_program) {
         ground_program->release();
         delete(ground_program);
     }
-    ground_program = prepareShaderProgram(":/shadow.vert", ":/shadow.frag");
+    ground_program = prepareShaderProgram(":/softshadow.vert", ":/softshadow.frag");
     if (shadowMapGenerationProgram) {
         shadowMapGenerationProgram->release();
         delete(shadowMapGenerationProgram);
