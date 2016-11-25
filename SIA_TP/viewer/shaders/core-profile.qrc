@@ -24,5 +24,7 @@
 	<file>marbre.frag</file>
 	<file>cookTorrence.vert</file>
 	<file>cookTorrence.frag</file>
+	<file>Gooch.vert</file>
+	<file>Gooch.frag</file>
     </qresource>
 </RCC>
