@@ -5,6 +5,7 @@ uniform bool blinnPhong;
 uniform float shininess;
 uniform float eta;
 uniform sampler2D shadowMap ; 
+uniform float bias;
 
 in vec4 eyeVector;
 in vec4 lightVector;
@@ -39,7 +40,7 @@ void main( void )
     light.y = (1 - light.y) ; 
 
     //Bias
-    float bias = max(0.05 * (1.0 - dot(normNormals,normLightVector)), 0.005);  
+    //float bias = max(0.05 * (1.0 - dot(normNormals,normLightVector)), 0.005);  
 
     if (texture(shadowMap, light.xy).z < light.z-bias) {
 	   fragColor = ambiant;

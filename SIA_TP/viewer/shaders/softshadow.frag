@@ -4,7 +4,9 @@ uniform float lightIntensity;
 uniform bool blinnPhong;
 uniform float shininess;
 uniform float eta;
-uniform sampler2D shadowMap ; 
+uniform sampler2D shadowMap;
+uniform int nSamples_softShadow; 
+uniform float bias;
 
 in vec4 eyeVector;
 in vec4 lightVector;
@@ -32,26 +34,28 @@ void main( void )
     float Fo = pow((1 - eta),2)/pow((1+eta),2) ; 
     float Fresnel = Fo + (1 - Fo)*pow((1 - dot(vecH,normEyeVector)),5) ; 
 
-
-
-    //Shadow Mapping
+    //Shadow coordinates
     vec4 light = ((lightSpace / lightSpace.w)*0.5 ) +0.5  ; 
     light.y = (1 - light.y) ; 
 
     //Bias
-    float bias = max(0.05 * (1.0 - dot(normNormals,normLightVector)), 0.005);  
+    //float bias = max(0.05 * (1.0 - dot(normNormals,normLightVector)), 0.005);  
 
-    float x,y;
-    for (y=-0.015; y <=0.02; y+=0.005) {
-    	for (x=-0.015; x <=0.02; x+=0.005) {
-    	    if (texture(shadowMap,light.xy + vec2(x,y)).z < light.z-bias) {
+    int x,y;
+    float pas = 0.0005;
+    //int nSamples_softShadow = 3;
+
+    for (y=-nSamples_softShadow; y <=nSamples_softShadow; y++) {
+    	for (x=-nSamples_softShadow; x <=nSamples_softShadow; x++) {
+	    if (texture(shadowMap,light.xy + vec2(x*pas,y*pas)).z < light.z-bias) {
 	       fragColor += ambiant;
     	    } else {
 	       fragColor += ambiant + diffuse + Fresnel*specular; 
     	    }
 	}
     }
-    fragColor /= 64.0;
+    	 
+    fragColor /= pow(2*nSamples_softShadow+1,2);
 
    
 }

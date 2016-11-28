@@ -47,5 +47,6 @@ void main( void )
     vec4 vecH = normalize(normEyeVector + normLightVector);  
     vec4 specular = 0.4 * vertColor * pow(max(dot(normNormals, vecH), 0),4*shininess) * lightIntensity ; 
 
-    fragColor = ambiant + diffuse + specular ;
+    //fragColor = ambiant + diffuse + specular ;
+    fragColor = vec4(newNormal,1.0);
 }
