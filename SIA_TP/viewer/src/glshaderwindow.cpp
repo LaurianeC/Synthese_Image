@@ -93,7 +93,7 @@ void glShaderWindow::openSceneFromFile() {
 }
 
 void glShaderWindow::openNewTexture() {
-    QFileDialog dialog(0, "Open texture image", workingDirectory + "../textures/", "*.png *.PNG *.jpg *.JPG");
+    QFileDialog dialog(0, "Open texture image", workingDirectory + "../textures/", "*.png *.PNG *.jpg *.JPG *.tif");
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     QString filename;
     int ret = dialog.exec();
@@ -655,8 +655,10 @@ void glShaderWindow::loadTexturesForShaders() {
     // load textures as required by the shader.
     if (m_program->uniformLocation("earthDay") != -1) {
         // the shader is about the earth. We load the related textures (day + relief)
+        std::cout << "EARTH DAY" << std::endl ;
         glActiveTexture(GL_TEXTURE0);
-        texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth1.png"));
+	texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth1.png"));
+        //texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/Panda.png"));
         if (texture) {
             texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
             texture->setMagnificationFilter(QOpenGLTexture::Linear);
@@ -665,13 +667,15 @@ void glShaderWindow::loadTexturesForShaders() {
             m_program->setUniformValue("earthDay", 0);
         }
         glActiveTexture(GL_TEXTURE1);
-        normalMap = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth3.png"));
+	normalMap = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth3.png"));
+        //normalMap = new QOpenGLTexture(QImage(workingDirectory + "../textures/Panda_normals.png"));
         if (normalMap) {
             normalMap->setWrapMode(QOpenGLTexture::MirroredRepeat);
             normalMap->setMagnificationFilter(QOpenGLTexture::LinearMipMapLinear);
             normalMap->setMinificationFilter(QOpenGLTexture::Linear);
             normalMap->bind(1);
             m_program->setUniformValue("earthNormals", 1);
+	    std::cout << "NORMAL MAP" << std::endl;
         }
     } else {
         if ((m_program->uniformLocation("colorTexture") != -1) || (ground_program->uniformLocation("colorTexture") != -1)) {
@@ -741,7 +745,7 @@ void glShaderWindow::initialize()
         ground_program->release();
         delete(ground_program);
     }
-    ground_program = prepareShaderProgram(":/softshadow.vert", ":/softshadow.frag");
+    ground_program = prepareShaderProgram(":/2_phong.vert", ":/2_phong.frag");
     if (shadowMapGenerationProgram) {
         shadowMapGenerationProgram->release();
         delete(shadowMapGenerationProgram);
