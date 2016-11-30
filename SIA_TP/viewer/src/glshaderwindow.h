@@ -41,6 +41,7 @@ public slots:
     void setShader(const QString& size);
     void phongClicked();
     void blinnPhongClicked();
+    void skyboxChanged(int state) ;
     void transparentClicked();
     void opaqueClicked();
     void updateLightIntensity(int lightSliderValue);
@@ -82,9 +83,19 @@ private:
     int *g_indices;
     int g_numPoints;
     int g_numIndices;
+    //Skybox
+    trimesh::point *s_vertices;
+    trimesh::vec *s_normals;
+    trimesh::vec2 *s_texcoords;
+    trimesh::point *s_colors;
+    int *s_indices;
+    int s_numPoints;
+    int s_numIndices;
     // Parameters controlled by UI
     bool blinnPhong;
     bool transparent;
+    bool skybox_checked = false ;
+
     float eta;
     int nSamples_softShadow;
     float bias;
@@ -92,12 +103,15 @@ private:
     float shininess;
     float lightDistance;
     float groundDistance;
+    float skyboxDistance ; // ???
 
 
     // OpenGL variables encapsulated by Qt
     QOpenGLShaderProgram *m_program;
     QOpenGLShaderProgram *ground_program;
     QOpenGLShaderProgram *shadowMapGenerationProgram;
+    QOpenGLShaderProgram *skybox_program;
+
     QOpenGLTexture* environmentMap;
     QOpenGLTexture* texture;
     QOpenGLTexture* normalMap;
@@ -116,8 +130,16 @@ private:
     QOpenGLBuffer ground_normalBuffer;
     QOpenGLBuffer ground_colorBuffer;
     QOpenGLBuffer ground_texcoordBuffer;
+    //Skybox
+    QOpenGLVertexArrayObject skybox_vao;
+    QOpenGLBuffer skybox_vertexBuffer;
+    QOpenGLBuffer skybox_indexBuffer;
+    QOpenGLBuffer skybox_normalBuffer;
+    QOpenGLBuffer skybox_colorBuffer;
+    QOpenGLBuffer skybox_texcoordBuffer;
+
     // Matrix for all objects
-    QMatrix4x4 m_matrix[3]; // 0 = object, 1 = light, 2 = ground
+    QMatrix4x4 m_matrix[4]; // 0 = object, 1 = light, 2 = ground, 3 = skybox
     QMatrix4x4 m_perspective;
     // Shadow mapping
     QOpenGLFramebufferObject* shadowMap;

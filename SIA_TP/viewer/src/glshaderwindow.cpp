@@ -9,11 +9,14 @@
 #include <QGroupBox>
 #include <QRadioButton>
 #include <QSlider>
+#include <QCheckBox>
 #include <QLabel>
 // Layouts for User interface
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <assert.h>
+#include <QDebug>
+#include <QtCore/qmath.h>
 
 
 #include "perlinNoise.h" // defines tables for Perlin Noise
@@ -21,12 +24,13 @@
 
 glShaderWindow::glShaderWindow(QWindow *parent)
     : OpenGLWindow(parent), modelMesh(0),
-      m_program(0), ground_program(0), shadowMapGenerationProgram(0),
+      m_program(0), ground_program(0), shadowMapGenerationProgram(0), skybox_program(0),
       g_vertices(0), g_normals(0), g_texcoords(0), g_colors(0), g_indices(0),
+      s_vertices(0), s_normals(0), s_texcoords(0), s_colors(0), s_indices(0),
       environmentMap(0), texture(0), normalMap(0), permTexture(0), pixels(0), mouseButton(Qt::NoButton), auxWidget(0),
-      blinnPhong(true), transparent(true), eta(1.5), nSamples_softShadow(4), bias(0.025), lightIntensity(2.0f), shininess(50.0f), lightDistance(5.0f), groundDistance(0.78),
+      blinnPhong(true), transparent(true), eta(1.5), nSamples_softShadow(4), bias(0.025), lightIntensity(2.0f), shininess(50.0f), lightDistance(5.0f), groundDistance(0.78), skyboxDistance(0.78),
       shadowMap(0), shadowMapDimension(512), fullScreenSnapshots(false),
-      m_indexBuffer(QOpenGLBuffer::IndexBuffer), ground_indexBuffer(QOpenGLBuffer::IndexBuffer)
+      m_indexBuffer(QOpenGLBuffer::IndexBuffer), ground_indexBuffer(QOpenGLBuffer::IndexBuffer), skybox_indexBuffer(QOpenGLBuffer::IndexBuffer)
 {
     m_fragShaderSuffix << "*.frag" << "*.fs";
     m_vertShaderSuffix << "*.vert" << "*.vs";
@@ -40,6 +44,7 @@ glShaderWindow::~glShaderWindow()
         delete m_program;
     }
     if (pixels) delete [] pixels;
+
     m_vertexBuffer.release();
     m_vertexBuffer.destroy();
     m_indexBuffer.release();
@@ -52,6 +57,7 @@ glShaderWindow::~glShaderWindow()
     m_texcoordBuffer.destroy();
     m_vao.release();
     m_vao.destroy();
+
     ground_vertexBuffer.release();
     ground_vertexBuffer.destroy();
     ground_indexBuffer.release();
@@ -64,10 +70,30 @@ glShaderWindow::~glShaderWindow()
     ground_texcoordBuffer.destroy();
     ground_vao.release();
     ground_vao.destroy();
+
+    skybox_vertexBuffer.release();
+    skybox_vertexBuffer.destroy();
+    skybox_indexBuffer.release();
+    skybox_indexBuffer.destroy();
+    skybox_colorBuffer.release();
+    skybox_colorBuffer.destroy();
+    skybox_normalBuffer.release();
+    skybox_normalBuffer.destroy();
+    skybox_texcoordBuffer.release();
+    skybox_texcoordBuffer.destroy();
+    skybox_vao.release();
+    skybox_vao.destroy();
+
     if (g_vertices) delete [] g_vertices;
     if (g_colors) delete [] g_colors;
     if (g_normals) delete [] g_normals;
     if (g_indices) delete [] g_indices;
+
+    if (s_vertices) delete [] s_vertices;
+    if (s_colors) delete [] s_colors;
+    if (s_normals) delete [] s_normals;
+    if (s_indices) delete [] s_indices;
+
     if (shadowMap) {
         shadowMap->release();
         delete shadowMap;
@@ -101,7 +127,7 @@ void glShaderWindow::openNewTexture() {
         textureName = dialog.selectedFiles()[0];
         if (!textureName.isNull()) {
             if (m_program) m_program->bind();
-            if ((m_program->uniformLocation("colorTexture") != -1) || (ground_program->uniformLocation("colorTexture") != -1)) {
+            if ((m_program->uniformLocation("colorTexture") != -1) || (ground_program->uniformLocation("colorTexture") != -1) ) {
                 glActiveTexture(GL_TEXTURE0);
                 if (texture) {
                     texture->release();
@@ -117,6 +143,7 @@ void glShaderWindow::openNewTexture() {
                     texture->bind(0);
                     if (m_program->uniformLocation("colorTexture") != -1) m_program->setUniformValue("colorTexture", 0);
                     if (ground_program->uniformLocation("colorTexture") != -1) ground_program->setUniformValue("colorTexture", 0);
+                    //if (skybox_program->uniformLocation("colorTexture") != -1) skybox_program->setUniformValue("colorTexture", 0);
                 }
             }
         }
@@ -162,6 +189,17 @@ void glShaderWindow::phongClicked()
 void glShaderWindow::blinnPhongClicked()
 {
     blinnPhong = true;
+    renderNow();
+}
+
+void glShaderWindow::skyboxChanged(int state)
+{
+    if (state == Qt::Checked) {
+        skybox_checked = true ;
+    }
+    else {
+        skybox_checked = false ;
+    }
     renderNow();
 }
 
@@ -241,8 +279,16 @@ void glShaderWindow::showAuxWindow()
     QVBoxLayout *vbox2 = new QVBoxLayout;
     vbox2->addWidget(transparent1);
     vbox2->addWidget(transparent2);
+    //groupBox2->setLayout(vbox2);
+    //buttons->addWidget(groupBox2);
+
+    //Skybox checkbox
+    QCheckBox *checkSky = new QCheckBox("Skybox");
+    connect(checkSky, SIGNAL(stateChanged(int)), this, SLOT(skyboxChanged(int)));
+    vbox2->addWidget(checkSky);
     groupBox2->setLayout(vbox2);
     buttons->addWidget(groupBox2);
+
     outer->addLayout(buttons);
 
     // light source intensity
@@ -416,6 +462,7 @@ void glShaderWindow::bindSceneToProgram()
     ground_vao.bind();
     ground_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     ground_vertexBuffer.bind();
+
     trimesh::point center = modelMesh->bsphere.center;
     float radius = modelMesh->bsphere.r;
 
@@ -435,7 +482,7 @@ void glShaderWindow::bindSceneToProgram()
             g_colors[p] = trimesh::point(0.6, 0.85, 0.9);
             float theta = (float)j * 2 * M_PI / numTh;
             float rad =  5.0 * radius * (float) i / numR;
-            g_vertices[p] = center + trimesh::point(rad * cos(theta), - groundDistance * radius, rad * sin(theta));
+            g_vertices[p] = center + trimesh::point(rad * cos(theta), - groundDistance * radius, rad * sin(theta));           
             rad =  5.0 * (float) i / numR;
             g_texcoords[p] = trimesh::vec2(rad * cos(theta), rad * sin(theta));
         }
@@ -452,6 +499,7 @@ void glShaderWindow::bindSceneToProgram()
     ground_texcoordBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     ground_texcoordBuffer.bind();
     ground_texcoordBuffer.allocate(g_texcoords, g_numPoints * sizeof(trimesh::vec2));
+
 
     g_numIndices = 0;
     for (int i = 0; i < numR - 1; i++) {
@@ -502,6 +550,112 @@ void glShaderWindow::bindSceneToProgram()
     shadowMapGenerationProgram->enableAttributeArray( "texcoords" );
     ground_program->release();
     ground_vao.release();
+
+
+
+    //Bind skybox VAO to program
+    skybox_vao.bind();
+    skybox_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    skybox_vertexBuffer.bind();
+
+
+   // trimesh::point center = modelMesh->bsphere.center;
+    trimesh::point center_skybox = modelMesh->bsphere.center + trimesh::point(0,0,0) ;
+    float radius_Skybox = modelMesh->bsphere.r;
+    //int numRS = 10;
+    int numThS = 50;
+    int numPhiS = 50 ;
+
+    s_numPoints = numPhiS * numThS;
+
+    // Allocate once, fill in for every new model.
+    if (s_vertices == 0) s_vertices = new trimesh::point[s_numPoints];
+    if (s_normals == 0) s_normals = new trimesh::vec[s_numPoints];
+    if (s_colors == 0) s_colors = new trimesh::point[s_numPoints];
+    if (s_texcoords == 0) s_texcoords = new trimesh::vec2[s_numPoints];
+    if (s_indices == 0) s_indices = new int[6 * s_numPoints];
+
+    for (int j = 0; j < numThS ; j++) {
+        for (int k = 0; k < numPhiS ; k++) {
+            int p = j + k * numThS;
+            float phi = (float)k * 2 * M_PI / numPhiS ;
+            float theta = (float)j * 2 * M_PI / numThS;
+            float rad =  10 * radius_Skybox ;
+            s_normals[p] = trimesh::point(rad * sin(phi) * cos(theta), rad * cos(phi), rad * sin(phi) * sin(theta)) - center_skybox;
+            s_colors[p] = trimesh::point(1, 0, 0);
+            s_vertices[p] = center_skybox + trimesh::point(rad * sin(phi) * cos(theta), rad * cos(phi), rad * sin(phi) * sin(theta));
+            s_texcoords[p] = trimesh::vec2(0.5 + qAtan2(rad * sin(phi) * cos(theta), rad * sin(phi) * sin(theta))/(2*M_PI)  , 0.5 - (asin(rad * cos(phi)))/M_PI );
+        }
+    }
+
+
+    skybox_vertexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    skybox_vertexBuffer.bind();
+    skybox_vertexBuffer.allocate(s_vertices, s_numPoints * sizeof(trimesh::point));
+    skybox_normalBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    skybox_normalBuffer.bind();
+    skybox_normalBuffer.allocate(s_normals, s_numPoints * sizeof(trimesh::point));
+    skybox_colorBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    skybox_colorBuffer.bind();
+    skybox_colorBuffer.allocate(s_colors, s_numPoints * sizeof(trimesh::point));
+    skybox_texcoordBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    skybox_texcoordBuffer.bind();
+    skybox_texcoordBuffer.allocate(s_texcoords, s_numPoints * sizeof(trimesh::vec2));
+
+
+    s_numIndices = 0;
+    for (int i = 0; i < numThS - 1; i++) {
+        for (int j = 0; j < numPhiS; j++) {
+            int j_1 = (j + 1) % numThS;
+            s_indices[s_numIndices++] = i + j * numThS;
+            s_indices[s_numIndices++] = i + 1 + j_1 * numThS;
+            s_indices[s_numIndices++] = i + 1 + j * numThS;
+            s_indices[s_numIndices++] = i + j * numThS;
+            s_indices[s_numIndices++] = i + j_1 * numThS;
+            s_indices[s_numIndices++] = i + 1 + j_1 * numThS;
+        }
+    }
+
+    skybox_indexBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    skybox_indexBuffer.bind();
+    skybox_indexBuffer.allocate(s_indices, s_numIndices * sizeof(int));
+
+
+    skybox_program->bind();
+    skybox_vertexBuffer.bind();
+    skybox_program->setAttributeBuffer( "vertex", GL_FLOAT, 0, 3 );
+    skybox_program->enableAttributeArray( "vertex" );
+    skybox_colorBuffer.bind();
+    skybox_program->setAttributeBuffer( "color", GL_FLOAT, 0, 3 );
+    skybox_program->enableAttributeArray( "color" );
+    skybox_normalBuffer.bind();
+    skybox_program->setAttributeBuffer( "normal", GL_FLOAT, 0, 3 );
+    skybox_program->enableAttributeArray( "normal" );
+    skybox_program->setUniformValue("noColor", false);
+    skybox_texcoordBuffer.bind();
+    skybox_program->setAttributeBuffer( "texcoords", GL_FLOAT, 0, 2 );
+    skybox_program->enableAttributeArray( "texcoords" );
+    skybox_program->release();
+
+
+    // Also bind it to shadow mapping program:
+    shadowMapGenerationProgram->bind();
+    skybox_vertexBuffer.bind();
+    shadowMapGenerationProgram->setAttributeBuffer( "vertex", GL_FLOAT, 0, 3 );
+    shadowMapGenerationProgram->enableAttributeArray( "vertex" );
+    shadowMapGenerationProgram->release();
+    skybox_colorBuffer.bind();
+    shadowMapGenerationProgram->setAttributeBuffer( "color", GL_FLOAT, 0, 3 );
+    shadowMapGenerationProgram->enableAttributeArray( "color" );
+    skybox_normalBuffer.bind();
+    shadowMapGenerationProgram->setAttributeBuffer( "normal", GL_FLOAT, 0, 3 );
+    shadowMapGenerationProgram->enableAttributeArray( "normal" );
+    skybox_texcoordBuffer.bind();
+    shadowMapGenerationProgram->setAttributeBuffer( "texcoords", GL_FLOAT, 0, 2 );
+    shadowMapGenerationProgram->enableAttributeArray( "texcoords" );
+    skybox_program->release();
+    skybox_vao.release();
+
 }
 
 void glShaderWindow::initializeTransformForScene()
@@ -517,6 +671,7 @@ void glShaderWindow::initializeTransformForScene()
     m_matrix[0].setToIdentity();
     m_matrix[1].setToIdentity();
     m_matrix[2].setToIdentity();
+    m_matrix[3].setToIdentity();
     m_matrix[0].lookAt(eye, center, QVector3D(0,1,0));
     m_matrix[1].translate(-center);
 }
@@ -652,14 +807,17 @@ void glShaderWindow::loadTexturesForShaders() {
         delete normalMap;
         normalMap = 0;
     }
-    // load textures as required by the shader.
+    // load textures as required by the shader
+
+
     if (m_program->uniformLocation("earthDay") != -1) {
         // the shader is about the earth. We load the related textures (day + relief)
-        std::cout << "EARTH DAY" << std::endl ;
         glActiveTexture(GL_TEXTURE0);
 	texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth1.png"));
         //texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/Panda.png"));
         if (texture) {
+            std::cout << "texture" << std::endl ;
+
             texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
             texture->setMagnificationFilter(QOpenGLTexture::Linear);
             texture->setWrapMode(QOpenGLTexture::MirroredRepeat);
@@ -670,6 +828,7 @@ void glShaderWindow::loadTexturesForShaders() {
 	normalMap = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth3.png"));
         //normalMap = new QOpenGLTexture(QImage(workingDirectory + "../textures/Panda_normals.png"));
         if (normalMap) {
+            std::cout << "normal map" << std::endl ;
             normalMap->setWrapMode(QOpenGLTexture::MirroredRepeat);
             normalMap->setMagnificationFilter(QOpenGLTexture::LinearMipMapLinear);
             normalMap->setMinificationFilter(QOpenGLTexture::Linear);
@@ -689,6 +848,7 @@ void glShaderWindow::loadTexturesForShaders() {
                 texture->bind(0);
                 if (m_program->uniformLocation("colorTexture") != -1) m_program->setUniformValue("colorTexture", 0);
                 if (ground_program->uniformLocation("colorTexture") != -1) ground_program->setUniformValue("colorTexture", 0);
+                //if (skybox_program->uniformLocation("colorTexture") != -1) skybox_program->setUniformValue("colorTexture", 0);
             }
         }
         if (m_program->uniformLocation("envMap") != -1) {
@@ -719,6 +879,23 @@ void glShaderWindow::loadTexturesForShaders() {
             }
         }
     }
+
+    if(skybox_program->uniformLocation("skybox") != -1) {
+        //Load the environment mapping texture for the skybox sphere
+        std::cout << "hello skybox texture" << std::endl ;
+
+        glActiveTexture(GL_TEXTURE2);
+        texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/pisa.png"));
+        if (texture) {
+            std::cout << "pisa opened correctly" << std::endl ;
+
+            texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+            texture->setMagnificationFilter(QOpenGLTexture::Linear);
+            texture->setWrapMode(QOpenGLTexture::MirroredRepeat);
+            texture->bind(0);
+            skybox_program->setUniformValue("skybox", 2);
+        }
+    }
 }
 
 void glShaderWindow::initialize()
@@ -740,12 +917,30 @@ void glShaderWindow::initialize()
         m_program->release();
         delete(m_program);
     }
-    m_program = prepareShaderProgram(":/2_phong.vert", ":/2_phong.frag");
+    m_program = prepareShaderProgram(":/3_textured.vert", ":/3_textured.frag");
+
     if (ground_program) {
         ground_program->release();
         delete(ground_program);
     }
+<<<<<<< HEAD
     ground_program = prepareShaderProgram(":/pcss.vert", ":/pcss.frag");
+=======
+
+    ground_program = prepareShaderProgram(":/shadow.vert", ":/shadow.frag");
+
+    if (skybox_program) {
+        std::cout << "delete skybox program" << std::endl ;
+
+        skybox_program->release();
+        delete(skybox_program);
+    }
+    std::cout << "prepare shader program" << std::endl ;
+
+    skybox_program = prepareShaderProgram(":/skybox.vert", ":/skybox.frag");
+
+
+>>>>>>> bea13f0adc00ecf3b80469dc0ec998e091ce42db
     if (shadowMapGenerationProgram) {
         shadowMapGenerationProgram->release();
         delete(shadowMapGenerationProgram);
@@ -774,6 +969,15 @@ void glShaderWindow::initialize()
     ground_normalBuffer.create();
     ground_texcoordBuffer.create();
     ground_vao.release();
+
+    skybox_vao.create();
+    skybox_vao.bind();
+    skybox_vertexBuffer.create();
+    skybox_indexBuffer.create();
+    skybox_colorBuffer.create();
+    skybox_normalBuffer.create();
+    skybox_texcoordBuffer.create();
+    skybox_vao.release();
 
     openScene();
 }
@@ -866,8 +1070,10 @@ void glShaderWindow::wheelEvent(QWheelEvent * ev)
         m_matrix[matrixMoving] = t * m_matrix[matrixMoving];
     } else  if (matrixMoving == 1) {
         lightDistance -= 0.1 * numDegrees.y();
-    } else  if (matrixMoving == 2) {
+    } else  if ((matrixMoving == 2) || (matrixMoving == 3)) {
         groundDistance += 0.1 * numDegrees.y();
+        skyboxDistance += 0.1 * numDegrees.y() ;
+
     }
     renderNow();
 }
@@ -929,6 +1135,7 @@ void glShaderWindow::timerEvent(QTimerEvent *e)
 
 void glShaderWindow::render()
 {
+    qDebug() << "render";
     QOpenGLTexture* sm = 0;
     m_program->bind();
     QVector3D center = QVector3D(modelMesh->bsphere.center[0],
@@ -941,6 +1148,7 @@ void glShaderWindow::render()
     QMatrix4x4 lightPerspective;
 
     if ((ground_program->uniformLocation("shadowMap") != -1) || (m_program->uniformLocation("shadowMap") != -1) ){
+
         glActiveTexture(GL_TEXTURE2);
         glViewport(0, 0, shadowMapDimension, shadowMapDimension);
         // The shader wants a shadow map.
@@ -956,6 +1164,7 @@ void glShaderWindow::render()
         // Render into shadow Map
         m_program->release();
         ground_program->release();
+       // skybox_program->release() ;
         shadowMapGenerationProgram->bind();
         if (!shadowMap->bind()) {
             std::cerr << "Can't render in the shadow map" << std::endl;
@@ -975,7 +1184,6 @@ void glShaderWindow::render()
         shadowMapGenerationProgram->setUniformValue("perspective", lightPerspective);
 	
 
-
         // Draw the entire scene:
         m_vao.bind();
         glDrawElements(GL_TRIANGLES, 3 * modelMesh->faces.size(), GL_UNSIGNED_INT, 0);
@@ -983,6 +1191,9 @@ void glShaderWindow::render()
         ground_vao.bind();
         glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
         ground_vao.release();
+        skybox_vao.bind();
+        glDrawElements(GL_TRIANGLES,  s_numIndices, GL_UNSIGNED_INT, 0);
+        skybox_vao.release() ;
         glFinish();
         // done. Back to normal drawing.
         shadowMapGenerationProgram->release();
@@ -1031,7 +1242,10 @@ void glShaderWindow::render()
     m_vao.release();
     m_program->release();
 
-    if (m_program->uniformLocation("earthDay") == -1) {
+
+    if ((m_program->uniformLocation("earthDay") == -1) && (!skybox_checked)) {
+        std::cout << "ground print" << std::endl ;
+
         glActiveTexture(GL_TEXTURE0);
         ground_program->bind();
         ground_program->setUniformValue("lightPosition", lightPosition);
@@ -1058,7 +1272,40 @@ void glShaderWindow::render()
         glDrawElements(GL_TRIANGLES, g_numIndices, GL_UNSIGNED_INT, 0);
         ground_vao.release();
         ground_program->release();
+
     }
+
+    if((skybox_program->uniformLocation("skybox") != -1) && (skybox_checked)) {
+        std::cout << "skybox print" << std::endl ;
+
+
+        glActiveTexture(GL_TEXTURE0);
+        skybox_program->bind();
+        skybox_program->setUniformValue("lightPosition", lightPosition);
+        skybox_program->setUniformValue("matrix", m_matrix[0]);
+        skybox_program->setUniformValue("lightMatrix", m_matrix[1]);
+        skybox_program->setUniformValue("perspective", m_perspective);
+        skybox_program->setUniformValue("normalMatrix", m_matrix[0].normalMatrix());
+        skybox_program->setUniformValue("lightIntensity", 1.0f);
+        skybox_program->setUniformValue("blinnPhong", blinnPhong);
+        skybox_program->setUniformValue("transparent", transparent);
+        skybox_program->setUniformValue("lightIntensity", lightIntensity);
+        skybox_program->setUniformValue("shininess", shininess);
+        skybox_program->setUniformValue("eta", eta);
+        skybox_program->setUniformValue("radius", modelMesh->bsphere.r);
+        //if (skybox_program->uniformLocation("colorTexture") != -1) skybox_program->setUniformValue("colorTexture", 0);
+      /*  if (skybox_program->uniformLocation("shadowMap") != -1) {
+            skybox_program->setUniformValue("shadowMap", shadowMap->texture());
+            skybox_program->setUniformValue("worldToLightSpace", lightPerspective*lightCoordMatrix);
+        } */
+
+        skybox_vao.bind();
+        glDrawElements(GL_TRIANGLES, s_numIndices, GL_UNSIGNED_INT, 0);
+        skybox_vao.release();
+        skybox_program->release();
+        std::cout << "printed skybox" << std::endl ;
+    }
+
 #ifdef CRUDE_BUT_WORKS
     if (sm) {
         sm->release();

@@ -7,8 +7,9 @@ NB : quand on créer une nouveau shader il faut l'ajouter à la liste dans le fi
 
 Obligatoire : 
 Textures Bitmaps (ok) --> shader "3_textured.frag" couplé avec Phong 
-Normal Mapping --> shader "normalMapping"
-Textures procédurales à base de bruit de Perlin 
+
+Normal Mapping (en cours Lauriane)
+Textures procédurales à base de bruit de Perlin (ok)
 
 Optionnel : 
 Wood spéculaire (ok Lauriane) --> shader "wood"
@@ -27,6 +28,8 @@ Obligatoire :
 Environment mapping avec coefficient de Fresnel (Ok) --> shader "5_envMap" 
 
 4) Matériaux 
+Cook-Torrance (ok) : marche bien sur le model "sphere.obj" 
+Gooch (en cours Lauriane) 
 
 5) Monte-Carlo sampling 
 

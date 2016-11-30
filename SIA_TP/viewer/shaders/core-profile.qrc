@@ -24,9 +24,13 @@
 	<file>marbre.frag</file>
 	<file>cookTorrence.vert</file>
 	<file>cookTorrence.frag</file>
+	<file>Gooch.vert</file>
+	<file>Gooch.frag</file>
 	<file>softshadow.vert</file>
 	<file>softshadow.frag</file>
 	<file>pcss.vert</file>
 	<file>pcss.frag</file>
+	<file>skybox.vert</file>
+	<file>skybox.frag</file>
     </qresource>
 </RCC>
