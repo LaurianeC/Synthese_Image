@@ -24,7 +24,7 @@ glShaderWindow::glShaderWindow(QWindow *parent)
       m_program(0), ground_program(0), shadowMapGenerationProgram(0),
       g_vertices(0), g_normals(0), g_texcoords(0), g_colors(0), g_indices(0),
       environmentMap(0), texture(0), normalMap(0), permTexture(0), pixels(0), mouseButton(Qt::NoButton), auxWidget(0),
-      blinnPhong(true), transparent(true), eta(1.5), nSamples_softShadow(4), bias(0.005), lightIntensity(1.0f), shininess(50.0f), lightDistance(5.0f), groundDistance(0.78),
+      blinnPhong(true), transparent(true), eta(1.5), nSamples_softShadow(4), bias(0.025), lightIntensity(2.0f), shininess(50.0f), lightDistance(5.0f), groundDistance(0.78),
       shadowMap(0), shadowMapDimension(512), fullScreenSnapshots(false),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer), ground_indexBuffer(QOpenGLBuffer::IndexBuffer)
 {
@@ -953,6 +953,7 @@ void glShaderWindow::render()
             // shadowMapFormat.setInternalTextureFormat(GL_DEPTH_COMPONENT);
             shadowMap = new QOpenGLFramebufferObject(shadowMapDimension, shadowMapDimension, shadowMapFormat);
         }
+	glCullFace(GL_FRONT);
         // Render into shadow Map
         m_program->release();
         ground_program->release();
@@ -973,7 +974,7 @@ void glShaderWindow::render()
         lightPerspective.perspective(45.0f, 1.0f, 2.0 * radius, 10.0 * radius);
         shadowMapGenerationProgram->setUniformValue("matrix", lightCoordMatrix);
         shadowMapGenerationProgram->setUniformValue("perspective", lightPerspective);
-
+	glCullFace(GL_BACK);
 	
 
 

@@ -41,10 +41,10 @@ void main( void )
     //Bias
     //float bias = max(0.05 * (1.0 - dot(normNormals,normLightVector)), 0.005);  
 
+    //PCF
     int x,y;
-    float pas = 0.0005;
-    //int nSamples_softShadow = 3;
-
+    //float pas = 0.0005;
+    float pas  = 1.0/512.0;
     for (y=-nSamples_softShadow; y <=nSamples_softShadow; y++) {
     	for (x=-nSamples_softShadow; x <=nSamples_softShadow; x++) {
 	    if (texture(shadowMap,light.xy + vec2(x*pas,y*pas)).z < light.z-bias) {
