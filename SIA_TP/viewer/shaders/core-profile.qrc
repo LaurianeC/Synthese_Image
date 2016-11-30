@@ -26,5 +26,7 @@
 	<file>cookTorrence.frag</file>
 	<file>softshadow.vert</file>
 	<file>softshadow.frag</file>
+	<file>pcss.vert</file>
+	<file>pcss.frag</file>
     </qresource>
 </RCC>

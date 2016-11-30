@@ -536,6 +536,7 @@ qrc_core-profile.cpp: shaders/core-profile.qrc \
 		shaders/4_earth.frag \
 		shaders/cookTorrence.vert \
 		shaders/3_textured.vert \
+		shaders/pcss.vert \
 		shaders/shadow.frag \
 		shaders/marbre.vert \
 		shaders/1_simple.frag \
@@ -549,6 +550,7 @@ qrc_core-profile.cpp: shaders/core-profile.qrc \
 		shaders/3_textured.frag \
 		shaders/4_earth.vert \
 		shaders/noiseAlone.vert \
+		shaders/pcss.frag \
 		shaders/marbre.frag \
 		shaders/shadow.vert
 	/usr/lib64/qt5/bin/rcc -name core-profile shaders/core-profile.qrc -o qrc_core-profile.cpp

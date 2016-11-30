@@ -745,7 +745,7 @@ void glShaderWindow::initialize()
         ground_program->release();
         delete(ground_program);
     }
-    ground_program = prepareShaderProgram(":/2_phong.vert", ":/2_phong.frag");
+    ground_program = prepareShaderProgram(":/pcss.vert", ":/pcss.frag");
     if (shadowMapGenerationProgram) {
         shadowMapGenerationProgram->release();
         delete(shadowMapGenerationProgram);
