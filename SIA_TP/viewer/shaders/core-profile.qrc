@@ -28,5 +28,7 @@
 	<file>Gooch.frag</file>
 	<file>softshadow.vert</file>
 	<file>softshadow.frag</file>
+	<file>skybox.vert</file>
+	<file>skybox.frag</file>
     </qresource>
 </RCC>
