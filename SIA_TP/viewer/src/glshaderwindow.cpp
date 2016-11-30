@@ -953,7 +953,6 @@ void glShaderWindow::render()
             // shadowMapFormat.setInternalTextureFormat(GL_DEPTH_COMPONENT);
             shadowMap = new QOpenGLFramebufferObject(shadowMapDimension, shadowMapDimension, shadowMapFormat);
         }
-	glCullFace(GL_FRONT);
         // Render into shadow Map
         m_program->release();
         ground_program->release();
@@ -974,7 +973,6 @@ void glShaderWindow::render()
         lightPerspective.perspective(45.0f, 1.0f, 2.0 * radius, 10.0 * radius);
         shadowMapGenerationProgram->setUniformValue("matrix", lightCoordMatrix);
         shadowMapGenerationProgram->setUniformValue("perspective", lightPerspective);
-	glCullFace(GL_BACK);
 	
 
 
