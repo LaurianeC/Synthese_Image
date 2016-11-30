@@ -27,6 +27,6 @@ void main( void )
     eyeVector = normalize(eyePosition - vertPosition)  ;
     lightVector = normalize(matrix*vec4(lightPosition, 1.0)-vertPosition);
 
-    vertNormal = normal;
+    vertNormal = normalize(normalMatrix*normal);
     gl_Position = perspective * matrix * vec4(vertex, 1.0);
 }

@@ -28,7 +28,7 @@ glShaderWindow::glShaderWindow(QWindow *parent)
       g_vertices(0), g_normals(0), g_texcoords(0), g_colors(0), g_indices(0),
       s_vertices(0), s_normals(0), s_texcoords(0), s_colors(0), s_indices(0),
       environmentMap(0), texture(0), normalMap(0), permTexture(0), pixels(0), mouseButton(Qt::NoButton), auxWidget(0),
-      blinnPhong(true), transparent(true), eta(1.5), lightIntensity(1.0f), shininess(50.0f), lightDistance(5.0f), groundDistance(0.78), skyboxDistance(0.78),
+      blinnPhong(true), transparent(true), eta(1.5), nSamples_softShadow(4), bias(0.025), lightIntensity(2.0f), shininess(50.0f), lightDistance(5.0f), groundDistance(0.78), skyboxDistance(0.78),
       shadowMap(0), shadowMapDimension(512), fullScreenSnapshots(false),
       m_indexBuffer(QOpenGLBuffer::IndexBuffer), ground_indexBuffer(QOpenGLBuffer::IndexBuffer), skybox_indexBuffer(QOpenGLBuffer::IndexBuffer)
 {
@@ -119,7 +119,7 @@ void glShaderWindow::openSceneFromFile() {
 }
 
 void glShaderWindow::openNewTexture() {
-    QFileDialog dialog(0, "Open texture image", workingDirectory + "../textures/", "*.png *.PNG *.jpg *.JPG");
+    QFileDialog dialog(0, "Open texture image", workingDirectory + "../textures/", "*.png *.PNG *.jpg *.JPG *.tif");
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     QString filename;
     int ret = dialog.exec();
@@ -233,6 +233,18 @@ void glShaderWindow::updateEta(int etaSliderValue)
     renderNow();
 }
 
+void glShaderWindow::updateNSamples(int nSamplesSliderValue)
+{
+  nSamples_softShadow = (nSamplesSliderValue-1)/2;
+    renderNow();
+}
+
+void glShaderWindow::updateBias(int biasSliderValue)
+{
+    bias = biasSliderValue/1000.0;
+    renderNow();
+}
+
 void glShaderWindow::showAuxWindow()
 {
     if (auxWidget)
@@ -331,6 +343,41 @@ void glShaderWindow::showAuxWindow()
     outer->addLayout(hboxEta);
     outer->addWidget(etaSlider);
 
+    // Soft shadow multiple sampling slider
+    QSlider* softShadowSlider = new QSlider(Qt::Horizontal);
+    softShadowSlider->setTickPosition(QSlider::TicksBelow);
+    softShadowSlider->setTickInterval(10);
+    softShadowSlider->setMinimum(1);
+    softShadowSlider->setMaximum(100);
+    softShadowSlider->setSliderPosition(2*nSamples_softShadow+1);
+    connect(softShadowSlider,SIGNAL(valueChanged(int)),this,SLOT(updateNSamples(int)));
+    QLabel* nSamplesLabel = new QLabel("Number of samples for soft shadow = ");
+    QLabel* nSamplesLabelValue = new QLabel();
+    nSamplesLabelValue->setNum(2*nSamples_softShadow+1);
+    connect(softShadowSlider,SIGNAL(valueChanged(int)),nSamplesLabelValue,SLOT(setNum(int)));
+    QHBoxLayout *hboxNSamples= new QHBoxLayout;
+    hboxNSamples->addWidget(nSamplesLabel);
+    hboxNSamples->addWidget(nSamplesLabelValue);
+    outer->addLayout(hboxNSamples);
+    outer->addWidget(softShadowSlider);
+
+    // Bias slider
+    QSlider* biasSlider = new QSlider(Qt::Horizontal);
+    biasSlider->setTickPosition(QSlider::TicksBelow);
+    biasSlider->setTickInterval(5);
+    biasSlider->setMinimum(0);
+    biasSlider->setMaximum(50);
+    biasSlider->setSliderPosition(bias*1000);
+    connect(biasSlider,SIGNAL(valueChanged(int)),this,SLOT(updateBias(int)));
+    QLabel* biasLabel = new QLabel("Bias for shadow mapping * 1000 =");
+    QLabel* biasLabelValue = new QLabel();
+    biasLabelValue->setNum(bias*1000);
+    connect(biasSlider,SIGNAL(valueChanged(int)),biasLabelValue,SLOT(setNum(int)));
+    QHBoxLayout *hboxBias= new QHBoxLayout;
+    hboxBias->addWidget(biasLabel);
+    hboxBias->addWidget(biasLabelValue);
+    outer->addLayout(hboxBias);
+    outer->addWidget(biasSlider);
 
     auxWidget->setLayout(outer);
     auxWidget->show();
@@ -765,10 +812,9 @@ void glShaderWindow::loadTexturesForShaders() {
 
     if (m_program->uniformLocation("earthDay") != -1) {
         // the shader is about the earth. We load the related textures (day + relief)
-        std::cout << "earth day" << std::endl ;
-
         glActiveTexture(GL_TEXTURE0);
-        texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth1.png"));
+	texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth1.png"));
+        //texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/Panda.png"));
         if (texture) {
             std::cout << "texture" << std::endl ;
 
@@ -779,7 +825,8 @@ void glShaderWindow::loadTexturesForShaders() {
             m_program->setUniformValue("earthDay", 0);
         }
         glActiveTexture(GL_TEXTURE1);
-        normalMap = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth3.png"));
+	normalMap = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth3.png"));
+        //normalMap = new QOpenGLTexture(QImage(workingDirectory + "../textures/Panda_normals.png"));
         if (normalMap) {
             std::cout << "normal map" << std::endl ;
             normalMap->setWrapMode(QOpenGLTexture::MirroredRepeat);
@@ -787,6 +834,7 @@ void glShaderWindow::loadTexturesForShaders() {
             normalMap->setMinificationFilter(QOpenGLTexture::Linear);
             normalMap->bind(1);
             m_program->setUniformValue("earthNormals", 1);
+	    std::cout << "NORMAL MAP" << std::endl;
         }
     } else {
         if ((m_program->uniformLocation("colorTexture") != -1) || (ground_program->uniformLocation("colorTexture") != -1)) {
@@ -875,6 +923,7 @@ void glShaderWindow::initialize()
         ground_program->release();
         delete(ground_program);
     }
+
     ground_program = prepareShaderProgram(":/shadow.vert", ":/shadow.frag");
 
     if (skybox_program) {
@@ -886,7 +935,6 @@ void glShaderWindow::initialize()
     std::cout << "prepare shader program" << std::endl ;
 
     skybox_program = prepareShaderProgram(":/skybox.vert", ":/skybox.frag");
-
 
 
     if (shadowMapGenerationProgram) {
@@ -1109,6 +1157,7 @@ void glShaderWindow::render()
             // shadowMapFormat.setInternalTextureFormat(GL_DEPTH_COMPONENT);
             shadowMap = new QOpenGLFramebufferObject(shadowMapDimension, shadowMapDimension, shadowMapFormat);
         }
+	glCullFace(GL_FRONT);
         // Render into shadow Map
         m_program->release();
         ground_program->release();
@@ -1130,7 +1179,7 @@ void glShaderWindow::render()
         lightPerspective.perspective(45.0f, 1.0f, 2.0 * radius, 10.0 * radius);
         shadowMapGenerationProgram->setUniformValue("matrix", lightCoordMatrix);
         shadowMapGenerationProgram->setUniformValue("perspective", lightPerspective);
-
+	glCullFace(GL_BACK);
 	
 
         // Draw the entire scene:
@@ -1176,6 +1225,8 @@ void glShaderWindow::render()
     m_program->setUniformValue("lightIntensity", lightIntensity);
     m_program->setUniformValue("shininess", shininess);
     m_program->setUniformValue("eta", eta);
+    m_program->setUniformValue("nSamples_softShadow", nSamples_softShadow);
+    m_program->setUniformValue("bias", bias);
     m_program->setUniformValue("radius", modelMesh->bsphere.r);
     // Shadow Mapping
     if (m_program->uniformLocation("shadowMap") != -1) {
@@ -1206,6 +1257,8 @@ void glShaderWindow::render()
         ground_program->setUniformValue("lightIntensity", lightIntensity);
         ground_program->setUniformValue("shininess", shininess);
         ground_program->setUniformValue("eta", eta);
+	ground_program->setUniformValue("nSamples_softShadow", nSamples_softShadow);
+	ground_program->setUniformValue("bias", bias);
         ground_program->setUniformValue("radius", modelMesh->bsphere.r);
         if (ground_program->uniformLocation("colorTexture") != -1) ground_program->setUniformValue("colorTexture", 0);
         if (ground_program->uniformLocation("shadowMap") != -1) {

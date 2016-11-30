@@ -3,16 +3,15 @@
 
 uniform float lightIntensity;
 uniform sampler2D earthDay;
-
-uniform mat3x3 normalMatrix;
+uniform mat3 normalMatrix;
 uniform bool blinnPhong;
 uniform float shininess;
 uniform float eta;
 
+
 in vec4 eyeVector;
 in vec4 lightVector;
 in vec3 vertNormal;
-
 in vec3 vert; 
 
 out vec4 fragColor;
@@ -26,9 +25,9 @@ void main( void )
     uvCoord.y = 0.5 - (asin(d.y))/M_PI ; 
 
 
-    vec4 vertColor = texture2D(earthDay, uvCoord) ;
+    vec4 vertColor = texture2D(earthDay, uvCoord) ; 
 
-    //Phong
+     //Phong 
     vec4 normNormals = vec4(normalize(vertNormal),1.0) ;
     vec4 normLightVector = normalize(lightVector) ; 
     vec4 normEyeVector = normalize(eyeVector) ; 
@@ -42,7 +41,7 @@ void main( void )
     //Fresnel 
     float Fo = pow((1 - eta),2)/pow((1+eta),2) ; 
     float Fresnel = Fo + (1 - Fo)*pow((1 - dot(vecH,normEyeVector)),5) ; 
+    
 
-
-    fragColor = ambiant + diffuse ;
+   fragColor = ambiant + diffuse + Fresnel*specular;
 }
