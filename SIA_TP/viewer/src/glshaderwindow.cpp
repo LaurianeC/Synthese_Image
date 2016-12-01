@@ -203,6 +203,18 @@ void glShaderWindow::skyboxChanged(int state)
     renderNow();
 }
 
+
+void glShaderWindow::groundChanged(int state)
+{
+    if (state == Qt::Checked) {
+        ground_checked = true ;
+    }
+    else {
+        ground_checked = false ;
+    }
+    renderNow();
+}
+
 void glShaderWindow::transparentClicked()
 {
     transparent = true;
@@ -286,6 +298,13 @@ void glShaderWindow::showAuxWindow()
     QCheckBox *checkSky = new QCheckBox("Skybox");
     connect(checkSky, SIGNAL(stateChanged(int)), this, SLOT(skyboxChanged(int)));
     vbox2->addWidget(checkSky);
+
+    //Ground checkbox
+    QCheckBox *checkGround = new QCheckBox("Ground");
+    checkGround->setChecked(false);
+    connect(checkGround, SIGNAL(stateChanged(int)), this, SLOT(groundChanged(int)));
+    vbox2->addWidget(checkGround);
+
     groupBox2->setLayout(vbox2);
     buttons->addWidget(groupBox2);
 
@@ -312,10 +331,10 @@ void glShaderWindow::showAuxWindow()
     QSlider* shininessSlider = new QSlider(Qt::Horizontal);
     shininessSlider->setTickPosition(QSlider::TicksBelow);
     shininessSlider->setMinimum(0);
-    shininessSlider->setMaximum(200);
+    shininessSlider->setMaximum(10);
     shininessSlider->setSliderPosition(shininess);
     connect(shininessSlider,SIGNAL(valueChanged(int)),this,SLOT(updateShininess(int)));
-    QLabel* shininessLabel = new QLabel("Phong exponent = ");
+    QLabel* shininessLabel = new QLabel("Phong shininess exponent = ");
     QLabel* shininessLabelValue = new QLabel();
     shininessLabelValue->setNum(shininess);
     connect(shininessSlider,SIGNAL(valueChanged(int)),shininessLabelValue,SLOT(setNum(int)));
@@ -807,17 +826,17 @@ void glShaderWindow::loadTexturesForShaders() {
         delete normalMap;
         normalMap = 0;
     }
+
     // load textures as required by the shader
+    if ((m_program->uniformLocation("earthDay") != -1)||(m_program->uniformLocation("earthNormals") != -1)) {
+        std::cout << "hay earthday" << std::endl ;
 
-
-    if (m_program->uniformLocation("earthDay") != -1) {
         // the shader is about the earth. We load the related textures (day + relief)
         glActiveTexture(GL_TEXTURE0);
-	texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth1.png"));
+        texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth1.png"));
         //texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/Panda.png"));
         if (texture) {
             std::cout << "texture" << std::endl ;
-
             texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
             texture->setMagnificationFilter(QOpenGLTexture::Linear);
             texture->setWrapMode(QOpenGLTexture::MirroredRepeat);
@@ -879,15 +898,13 @@ void glShaderWindow::loadTexturesForShaders() {
         }
     }
 
-    if(skybox_program->uniformLocation("skybox") != -1) {
+    if((skybox_program->uniformLocation("skybox") != -1)) {
         //Load the environment mapping texture for the skybox sphere
         std::cout << "hello skybox texture" << std::endl ;
 
         glActiveTexture(GL_TEXTURE2);
         texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/pisa.png"));
         if (texture) {
-            std::cout << "pisa opened correctly" << std::endl ;
-
             texture->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
             texture->setMagnificationFilter(QOpenGLTexture::Linear);
             texture->setWrapMode(QOpenGLTexture::MirroredRepeat);
@@ -1237,9 +1254,7 @@ void glShaderWindow::render()
     m_program->release();
 
 
-    if ((m_program->uniformLocation("earthDay") == -1) && (!skybox_checked)) {
-        std::cout << "ground print" << std::endl ;
-
+    if ((m_program->uniformLocation("earthDay") == -1) && (ground_checked)) {
         glActiveTexture(GL_TEXTURE0);
         ground_program->bind();
         ground_program->setUniformValue("lightPosition", lightPosition);
@@ -1270,7 +1285,7 @@ void glShaderWindow::render()
     }
 
     if((skybox_program->uniformLocation("skybox") != -1) && (skybox_checked)) {
-        std::cout << "skybox print" << std::endl ;
+        //std::cout << "skybox print" << std::endl ;
 
 
         glActiveTexture(GL_TEXTURE0);
@@ -1287,17 +1302,11 @@ void glShaderWindow::render()
         skybox_program->setUniformValue("shininess", shininess);
         skybox_program->setUniformValue("eta", eta);
         skybox_program->setUniformValue("radius", modelMesh->bsphere.r);
-        //if (skybox_program->uniformLocation("colorTexture") != -1) skybox_program->setUniformValue("colorTexture", 0);
-      /*  if (skybox_program->uniformLocation("shadowMap") != -1) {
-            skybox_program->setUniformValue("shadowMap", shadowMap->texture());
-            skybox_program->setUniformValue("worldToLightSpace", lightPerspective*lightCoordMatrix);
-        } */
-
         skybox_vao.bind();
         glDrawElements(GL_TRIANGLES, s_numIndices, GL_UNSIGNED_INT, 0);
         skybox_vao.release();
         skybox_program->release();
-        std::cout << "printed skybox" << std::endl ;
+       // std::cout << "printed skybox" << std::endl ;
     }
 
 #ifdef CRUDE_BUT_WORKS

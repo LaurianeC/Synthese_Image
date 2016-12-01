@@ -42,6 +42,8 @@ public slots:
     void phongClicked();
     void blinnPhongClicked();
     void skyboxChanged(int state) ;
+    void groundChanged(int state) ;
+
     void transparentClicked();
     void opaqueClicked();
     void updateLightIntensity(int lightSliderValue);
@@ -95,6 +97,7 @@ private:
     bool blinnPhong;
     bool transparent;
     bool skybox_checked = false ;
+    bool ground_checked = true ;
 
     float eta;
     int nSamples_softShadow;
