@@ -119,6 +119,8 @@ private:
     QOpenGLTexture* texture;
     QOpenGLTexture* normalMap;
     QOpenGLTexture* permTexture;
+    QOpenGLTexture* skyboxTexture;
+
     // Model
     QOpenGLBuffer m_vertexBuffer;
     QOpenGLBuffer m_indexBuffer;
