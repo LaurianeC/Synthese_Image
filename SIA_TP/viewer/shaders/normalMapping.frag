@@ -60,14 +60,25 @@ void main( void )
     vec3 newNormal = normalMatrix*TBN*normalS;
 
     //Phong
-    vec4 normNormals = normalize(vec4(newNormal,1.0)) ;
-    vec4 normLightVector = normalize(lightVector) ; 
+    vec4 normNormals = normalize(vec4(newNormal,0.0)) ;
+    vec4 normLightVector = normalize(lightVector); 
     vec4 normEyeVector = normalize(eyeVector) ; 
 
     vec4 ambiant = 0.2 * vertColor * lightIntensity ;
     vec4 diffuse = 0.4 * vertColor * max(dot(normNormals,normLightVector), 0) * lightIntensity;
+    vec4 specular;
     vec4 vecH = normalize(normEyeVector + normLightVector);  
-    vec4 specular = 0.4 * vertColor * pow(max(dot(normNormals, vecH), 0),4*shininess) * lightIntensity ; 
+    if (blinnPhong) {
+       specular = 0.4 * vertColor * pow(max(dot(normNormals, vecH), 0),4*shininess) * lightIntensity ; 
+    } else {
+      vec4 refl = 2*(dot(normNormals,normLightVector))*normNormals-normLightVector;
+      refl=normalize(refl);
+      specular = 0.4 * vertColor * lightIntensity * pow(max(dot(refl,normEyeVector),0),shininess);
+    }
+
+    //Fresnel 
+    float Fo = pow((1 - eta),2)/pow((1+eta),2) ; 
+    float Fresnel = Fo + (1 - Fo)*pow((1 - dot(vecH,normEyeVector)),5) ; 
 
     fragColor = ambiant + diffuse + specular ;
     //fragColor = vec4(10*normalS,1.0);

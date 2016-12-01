@@ -940,6 +940,7 @@ void glShaderWindow::initialize()
         ground_program->release();
         delete(ground_program);
     }
+
     ground_program = prepareShaderProgram(":/shadow.vert", ":/shadow.frag");
 
     if (skybox_program) {

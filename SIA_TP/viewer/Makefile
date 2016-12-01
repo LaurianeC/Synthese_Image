@@ -531,6 +531,7 @@ qrc_core-profile.cpp: shaders/core-profile.qrc \
 		shaders/h_shadowMapGeneration.vert \
 		shaders/2_phong.frag \
 		shaders/wood.frag \
+		shaders/Gooch.vert \
 		shaders/normalMapping.frag \
 		shaders/noiseAlone.frag \
 		shaders/4_earth.frag \
@@ -539,10 +540,12 @@ qrc_core-profile.cpp: shaders/core-profile.qrc \
 		shaders/pcss.vert \
 		shaders/shadow.frag \
 		shaders/marbre.vert \
+		shaders/skybox.vert \
 		shaders/1_simple.frag \
 		shaders/5_envMap.frag \
 		shaders/softshadow.frag \
 		shaders/h_shadowMapGeneration.frag \
+		shaders/Gooch.frag \
 		shaders/2_phong.vert \
 		shaders/wood.vert \
 		shaders/normalMapping.vert \
@@ -552,6 +555,7 @@ qrc_core-profile.cpp: shaders/core-profile.qrc \
 		shaders/noiseAlone.vert \
 		shaders/pcss.frag \
 		shaders/marbre.frag \
+		shaders/skybox.frag \
 		shaders/shadow.vert
 	/usr/lib64/qt5/bin/rcc -name core-profile shaders/core-profile.qrc -o qrc_core-profile.cpp
 
