@@ -18,6 +18,7 @@
 #include <assert.h>
 #include <QDebug>
 #include <QtCore/qmath.h>
+#include <QComboBox>
 
 
 #include "perlinNoise.h" // defines tables for Perlin Noise
@@ -213,6 +214,7 @@ void glShaderWindow::groundChanged(int state)
         ground_checked = false ;
     }
     renderNow();
+
 }
 
 void glShaderWindow::transparentClicked()
@@ -402,13 +404,33 @@ void glShaderWindow::showAuxWindow()
 
 
     //Demonstrations
-    QPushButton* softShadowButton = new QPushButton() ;
-    softShadowButton->setText("soft shadow");
-    QHBoxLayout *hboxSoftShadow= new QHBoxLayout;
-    hboxSoftShadow->addWidget(softShadowButton);
-    outer->addLayout(hboxSoftShadow);
+   QComboBox* ground_shader = new QComboBox() ;
+   ground_shader->addItem("Choix du shader pour le sol");
+   ground_shader->addItem("Soft Shadows");
+   ground_shader->addItem("Hard Shadows");
+   ground_shader->addItem("Phong");
+   connect(ground_shader, SIGNAL(currentTextChanged(QString)), this, SLOT(handleGroundShader(QString))) ;
+   QHBoxLayout* hboxGroundShader = new QHBoxLayout ;
+   hboxGroundShader->addWidget(ground_shader);
+   outer->addLayout(hboxGroundShader);
 
+}
 
+void glShaderWindow::handleGroundShader(QString currentText) {
+    if (currentText == "Soft Shadows") {
+        groundVertShader = ":/softshadow.vert";
+        groundFragShader = ":/softshadow.frag";
+    }
+    if(currentText == "Phong") {
+        groundVertShader = ":/2_phong.vert";
+        groundFragShader = ":/2_phong.frag";
+    }
+    if(currentText == "Hard Shadows") {
+        groundVertShader = ":/shadow.vert";
+
+        groundFragShader = ":/shadow.frag";
+    }
+    reloadGroundShader();
 }
 
 
@@ -962,6 +984,44 @@ void glShaderWindow::deleteSkyboxTexture() {
 
 }
 
+void glShaderWindow::reloadGroundShader(){
+
+    std::cout << "reload" << std::endl ;
+    ground_vertexBuffer.release();
+    ground_vertexBuffer.destroy();
+    ground_indexBuffer.release();
+    ground_indexBuffer.destroy();
+    ground_colorBuffer.release();
+    ground_colorBuffer.destroy();
+    ground_normalBuffer.release();
+    ground_normalBuffer.destroy();
+    ground_texcoordBuffer.release();
+    ground_texcoordBuffer.destroy();
+    ground_vao.release();
+    ground_vao.destroy();
+
+    if (ground_program) {
+        ground_program->release();
+        delete(ground_program);
+    }
+
+    ground_program = prepareShaderProgram(groundVertShader, groundFragShader);
+
+    ground_vao.create();
+    ground_vao.bind();
+    ground_vertexBuffer.create();
+    ground_indexBuffer.create();
+    ground_colorBuffer.create();
+    ground_normalBuffer.create();
+    ground_texcoordBuffer.create();
+    ground_vao.release();
+
+    bindSceneToProgram();
+    renderNow();
+}
+
+
+
 void glShaderWindow::initialize()
 {
     // Debug: which OpenGL version are we running? Must be >= 3.2 for this code to work.
@@ -981,14 +1041,14 @@ void glShaderWindow::initialize()
         m_program->release();
         delete(m_program);
     }
-    m_program = prepareShaderProgram(":/2_phong.vert", ":/2_phong.frag");
+    m_program = prepareShaderProgram(groundVertShader, groundFragShader);
 
     if (ground_program) {
         ground_program->release();
         delete(ground_program);
     }
 
-    ground_program = prepareShaderProgram(":/shadow.vert", ":/shadow.frag");
+    ground_program = prepareShaderProgram(groundVertShader, groundFragShader);
 
     if (skybox_program) {
         std::cout << "delete skybox program" << std::endl ;
@@ -999,7 +1059,14 @@ void glShaderWindow::initialize()
     std::cout << "prepare shader program" << std::endl ;
 
     skybox_program = prepareShaderProgram(":/skybox.vert", ":/skybox.frag");
-
+    ground_vao.create();
+    ground_vao.bind();
+    ground_vertexBuffer.create();
+    ground_indexBuffer.create();
+    ground_colorBuffer.create();
+    ground_normalBuffer.create();
+    ground_texcoordBuffer.create();
+    ground_vao.release();
     if (shadowMapGenerationProgram) {
         shadowMapGenerationProgram->release();
         delete(shadowMapGenerationProgram);
@@ -1302,7 +1369,6 @@ void glShaderWindow::render()
 
 
     if (ground_checked) {
-        std::cout << "ground print" << std::endl ;
         glActiveTexture(GL_TEXTURE0);
         ground_program->bind();
         ground_program->setUniformValue("lightPosition", lightPosition);
