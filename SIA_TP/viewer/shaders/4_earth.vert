@@ -14,12 +14,14 @@ out vec4 eyeVector;
 out vec4 lightVector;
 out vec3 vertNormal;
 out vec3 vert;
+out vec4 vertColor;
 
 void main( void )
 {
     
     vert = vertex;
-
+    if (noColor) vertColor = vec4(0.2, 0.6, 0.7, 1.0);
+    else vertColor = vec4(color, 1.0);
     vec4 vertPosition = matrix * vec4(vertex, 1.0) ;
     vec4 eyePosition = vec4(0.0, 0.0, 0.0, 1.0);
 

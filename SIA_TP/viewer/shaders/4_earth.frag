@@ -3,7 +3,7 @@
 
 uniform float lightIntensity;
 uniform sampler2D earthDay;
-uniform mat3 normalMatrix;
+uniform mat3x3 normalMatrix;
 uniform bool blinnPhong;
 uniform float shininess;
 uniform float eta;
@@ -13,6 +13,7 @@ in vec4 eyeVector;
 in vec4 lightVector;
 in vec3 vertNormal;
 in vec3 vert; 
+in vec4 vertColor;
 
 out vec4 fragColor;
 
@@ -25,23 +26,24 @@ void main( void )
     uvCoord.y = 0.5 - (asin(d.y))/M_PI ; 
 
 
-    vec4 vertColor = texture2D(earthDay, uvCoord) ; 
+    vec4 vColor = texture2D(earthDay, uvCoord) ; 
+    //vec4 vColor = vec4(1,1,1,0);
 
     //Phong
-    vec4 normNormals = vec4(normalize(vertNormal),0.0) ;
+    vec4 normNormals = normalize(vec4(vertNormal,0.0)) ;
     vec4 normLightVector = normalize(lightVector); 
     vec4 normEyeVector = normalize(eyeVector) ; 
 
-    vec4 ambiant = 0.2 * vertColor * lightIntensity ;
-    vec4 diffuse = 0.4 * vertColor * max(dot(normNormals,normLightVector), 0) * lightIntensity;
+    vec4 ambiant = 0.2 * vColor * lightIntensity ;
+    vec4 diffuse = 0.4 * vColor * max(dot(normNormals,normLightVector), 0) * lightIntensity;
     vec4 specular;
     vec4 vecH = normalize(normEyeVector + normLightVector);  
     if (blinnPhong) {
-       specular = 0.4 * vertColor * pow(max(dot(normNormals, vecH), 0),4*shininess) * lightIntensity ; 
+       specular = 0.4 * vColor * pow(max(dot(normNormals, vecH), 0),4*shininess) * lightIntensity ; 
     } else {
       vec4 refl = 2*(dot(normNormals,normLightVector))*normNormals-normLightVector;
       refl=normalize(refl);
-      specular = 0.4 * vertColor * lightIntensity * pow(max(dot(refl,normEyeVector),0),shininess);
+      specular = 0.4 * vColor * lightIntensity * pow(max(dot(refl,normEyeVector),0),shininess);
     }
 
     //Fresnel 
@@ -50,4 +52,5 @@ void main( void )
     
 
    fragColor = ambiant + diffuse + Fresnel*specular;
+   
 }

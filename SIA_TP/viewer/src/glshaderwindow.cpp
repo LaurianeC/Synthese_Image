@@ -802,6 +802,15 @@ void glShaderWindow::loadTexturesForShaders() {
         delete texture;
         texture = 0;
     }
+
+    if (skyboxTexture) {
+        glActiveTexture(GL_TEXTURE0);
+        skyboxTexture->release();
+        skyboxTexture->destroy();
+        delete skyboxTexture;
+        skyboxTexture = 0;
+    } 
+
     if (permTexture) {
         glActiveTexture(GL_TEXTURE1);
         permTexture->release();
@@ -824,13 +833,7 @@ void glShaderWindow::loadTexturesForShaders() {
         normalMap = 0;
     }
 
-    if (skyboxTexture) {
-        glActiveTexture(GL_TEXTURE0);
-        skyboxTexture->release();
-        skyboxTexture->destroy();
-        delete skyboxTexture;
-        skyboxTexture = 0;
-    }
+    
     // load textures as required by the shader
 
 
