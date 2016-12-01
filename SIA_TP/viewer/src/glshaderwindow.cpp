@@ -11,6 +11,7 @@
 #include <QSlider>
 #include <QCheckBox>
 #include <QLabel>
+#include <QPushButton>
 // Layouts for User interface
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -213,6 +214,7 @@ void glShaderWindow::groundChanged(int state)
     }
     renderNow();
 }
+
 void glShaderWindow::transparentClicked()
 {
     transparent = true;
@@ -289,16 +291,16 @@ void glShaderWindow::showAuxWindow()
     QVBoxLayout *vbox2 = new QVBoxLayout;
     vbox2->addWidget(transparent1);
     vbox2->addWidget(transparent2);
-    //groupBox2->setLayout(vbox2);
-    //buttons->addWidget(groupBox2);
 
     //Skybox checkbox
     QCheckBox *checkSky = new QCheckBox("Skybox");
+    connect(checkSky, SIGNAL(stateChanged(int)), this, SLOT(handleSkyboxTexture(int)));
     connect(checkSky, SIGNAL(stateChanged(int)), this, SLOT(skyboxChanged(int)));
     vbox2->addWidget(checkSky);
 
-     QCheckBox *checkGround = new QCheckBox("Ground");
-     checkGround->setChecked(true);
+    //Ground checkbox
+    QCheckBox *checkGround = new QCheckBox("Ground");
+    checkGround->setChecked(true);
     connect(checkGround, SIGNAL(stateChanged(int)), this, SLOT(groundChanged(int)));
     vbox2->addWidget(checkGround);
 
@@ -397,6 +399,16 @@ void glShaderWindow::showAuxWindow()
 
     auxWidget->setLayout(outer);
     auxWidget->show();
+
+
+    //Demonstrations
+    QPushButton* softShadowButton = new QPushButton() ;
+    softShadowButton->setText("soft shadow");
+    QHBoxLayout *hboxSoftShadow= new QHBoxLayout;
+    hboxSoftShadow->addWidget(softShadowButton);
+    outer->addLayout(hboxSoftShadow);
+
+
 }
 
 
@@ -824,13 +836,6 @@ void glShaderWindow::loadTexturesForShaders() {
         normalMap = 0;
     }
 
-    if (skyboxTexture) {
-        glActiveTexture(GL_TEXTURE0);
-        skyboxTexture->release();
-        skyboxTexture->destroy();
-        delete skyboxTexture;
-        skyboxTexture = 0;
-    }
     // load textures as required by the shader
 
 
@@ -902,6 +907,19 @@ void glShaderWindow::loadTexturesForShaders() {
             }
         }
     }
+}
+
+
+void glShaderWindow::handleSkyboxTexture(int i) {
+    if (i == Qt::Checked) {
+        loadSkyboxTexture();
+    }
+    else{
+        deleteSkyboxTexture();
+    }
+}
+
+void glShaderWindow::loadSkyboxTexture() {
 
     if(skybox_program->uniformLocation("skybox") != -1) {
         //Load the environment mapping texture for the skybox sphere
@@ -919,6 +937,19 @@ void glShaderWindow::loadTexturesForShaders() {
             skybox_program->setUniformValue("skybox", 0);
         }
     }
+
+}
+
+void glShaderWindow::deleteSkyboxTexture() {
+
+    if (skyboxTexture) {
+        glActiveTexture(GL_TEXTURE0);
+        skyboxTexture->release();
+        skyboxTexture->destroy();
+        delete skyboxTexture;
+        skyboxTexture = 0;
+    }
+
 }
 
 void glShaderWindow::initialize()
@@ -947,7 +978,7 @@ void glShaderWindow::initialize()
         delete(ground_program);
     }
 
-    ground_program = prepareShaderProgram(":/2_phong.vert", ":/2_phong.frag");
+    ground_program = prepareShaderProgram(":/shadow.vert", ":/shadow.frag");
 
     if (skybox_program) {
         std::cout << "delete skybox program" << std::endl ;
@@ -1261,9 +1292,8 @@ void glShaderWindow::render()
     m_program->release();
 
 
-    if ((m_program->uniformLocation("earthDay") == -1) && (!skybox_checked)) {
+    if (ground_checked) {
         std::cout << "ground print" << std::endl ;
-
         glActiveTexture(GL_TEXTURE0);
         ground_program->bind();
         ground_program->setUniformValue("lightPosition", lightPosition);
@@ -1295,7 +1325,6 @@ void glShaderWindow::render()
 
     if((skybox_program->uniformLocation("skybox") != -1) && (skybox_checked)) {
         std::cout << "skybox print" << std::endl ;
-
 
         glActiveTexture(GL_TEXTURE0);
         skybox_program->bind();
