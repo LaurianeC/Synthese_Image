@@ -923,9 +923,6 @@ void glShaderWindow::initialize()
         ground_program->release();
         delete(ground_program);
     }
-<<<<<<< HEAD
-    ground_program = prepareShaderProgram(":/pcss.vert", ":/pcss.frag");
-=======
 
     ground_program = prepareShaderProgram(":/shadow.vert", ":/shadow.frag");
 
@@ -939,8 +936,6 @@ void glShaderWindow::initialize()
 
     skybox_program = prepareShaderProgram(":/skybox.vert", ":/skybox.frag");
 
-
->>>>>>> bea13f0adc00ecf3b80469dc0ec998e091ce42db
     if (shadowMapGenerationProgram) {
         shadowMapGenerationProgram->release();
         delete(shadowMapGenerationProgram);
