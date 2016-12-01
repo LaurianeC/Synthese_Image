@@ -45,6 +45,7 @@ public slots:
     void groundChanged(int state) ;
 
     void handleSkyboxTexture(int i);
+    void handleGroundShader(QString text);
 
     void transparentClicked();
     void opaqueClicked();
@@ -69,6 +70,7 @@ private:
     void initializeTransformForScene();
     void initPermTexture();
     void loadTexturesForShaders();
+    void reloadGroundShader() ;
 
     void loadSkyboxTexture() ;
     void deleteSkyboxTexture() ;
@@ -81,7 +83,8 @@ private:
     QString  modelName;
     QString  textureName;
     QString  envMapName;
-    QString groundShader ;
+    QString groundVertShader = QString(":/2_phong.vert");
+    QString groundFragShader = QString(":/2_phong.frag");
     trimesh::TriMesh* modelMesh;
     uchar* pixels;
     // Ground
