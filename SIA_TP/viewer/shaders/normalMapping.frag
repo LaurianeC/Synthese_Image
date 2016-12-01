@@ -30,9 +30,7 @@ void main( void )
     uvCoord.x = 0.5 + atan(d.x,d.z)/(2.0*M_PI); 
     uvCoord.y = 0.5 + (asin(d.y))/M_PI ; 
 
-    //vec4 vColor = texture2D(earthDay, uvCoord);
-    vec4 vColor = texture2D(earthDay, vec2(0.0,0.0));
-    //vec4 vColor = vec4(1,1,1,0);    
+    vec4 vColor = texture2D(earthDay, uvCoord);
 
     //Normal mapping 
     vec3 normalS = normalize( 2.0 * texture(earthNormals, uvCoord).rgb - 1.0 ) ;
@@ -42,10 +40,10 @@ void main( void )
 
     mat3 TBN = mat3(tangente, bitangente, vertNormal) ; 
 
-    vec3 newNormal = TBN*normalS;
+    vec3 newNormal = normalMatrix*TBN*normalS;
 
-    //vec4 normNormals = vec4(normalize(newNormal),0.0) ;
-    vec4 normNormals = vec4(normalize(vertNormal),0.0);
+    vec4 normNormals = vec4(normalize(newNormal),0.0) ;
+    //vec4 normNormals = vec4(normalize(vertNormal),0.0);
     //Phong
     vec4 ambiant = 0.2 * vColor * lightIntensity ;
     vec4 diffuse = 0.4 * vColor * max(dot(normNormals,normLightVector), 0) * lightIntensity;
@@ -64,7 +62,5 @@ void main( void )
     float Fo = pow((1 - eta),2)/pow((1+eta),2) ; 
     float Fresnel = Fo + (1 - Fo)*pow((1 - dot(vecH,normEyeVector)),5) ; 
 
-    //fragColor = diffuse ;
     fragColor = ambiant + diffuse +Fresnel*specular;
-    //fragColor = 0.00001*vColor + vec4(newNormal,0.0) ;
 }
