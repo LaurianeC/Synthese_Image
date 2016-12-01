@@ -44,6 +44,8 @@ public slots:
     void skyboxChanged(int state) ;
     void groundChanged(int state) ;
 
+    void handleSkyboxTexture(int i);
+
     void transparentClicked();
     void opaqueClicked();
     void updateLightIntensity(int lightSliderValue);
@@ -67,6 +69,10 @@ private:
     void initializeTransformForScene();
     void initPermTexture();
     void loadTexturesForShaders();
+
+    void loadSkyboxTexture() ;
+    void deleteSkyboxTexture() ;
+
     void openScene();
     void mouseToTrackball(QVector2D &in, QVector3D &out);
 
@@ -75,6 +81,7 @@ private:
     QString  modelName;
     QString  textureName;
     QString  envMapName;
+    QString groundShader ;
     trimesh::TriMesh* modelMesh;
     uchar* pixels;
     // Ground
