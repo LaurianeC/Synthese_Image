@@ -283,8 +283,8 @@ void glShaderWindow::showAuxWindow()
     groupBox->setLayout(vbox);
     buttons->addWidget(groupBox);
 
-    QGroupBox *groupBox2 = new QGroupBox("Environment Mapping");
-    QRadioButton *transparent1 = new QRadioButton("&Transparent");
+    QGroupBox *groupBox2 = new QGroupBox("Display choice");
+  /*  QRadioButton *transparent1 = new QRadioButton("&Transparent");
     QRadioButton *transparent2 = new QRadioButton("&Opaque");
     if (transparent) transparent1->setChecked(true);
     else transparent2->setChecked(true);
@@ -292,7 +292,8 @@ void glShaderWindow::showAuxWindow()
     connect(transparent2, SIGNAL(clicked()), this, SLOT(opaqueClicked()));
     QVBoxLayout *vbox2 = new QVBoxLayout;
     vbox2->addWidget(transparent1);
-    vbox2->addWidget(transparent2);
+    vbox2->addWidget(transparent2);*/
+    QVBoxLayout *vbox2 = new QVBoxLayout;
 
     //Skybox checkbox
     QCheckBox *checkSky = new QCheckBox("Skybox");
@@ -368,7 +369,7 @@ void glShaderWindow::showAuxWindow()
     softShadowSlider->setTickPosition(QSlider::TicksBelow);
     softShadowSlider->setTickInterval(10);
     softShadowSlider->setMinimum(1);
-    softShadowSlider->setMaximum(100);
+    softShadowSlider->setMaximum(60);
     softShadowSlider->setSliderPosition(2*nSamples_softShadow+1);
     connect(softShadowSlider,SIGNAL(valueChanged(int)),this,SLOT(updateNSamples(int)));
     QLabel* nSamplesLabel = new QLabel("Number of samples for soft shadow = ");
@@ -976,7 +977,6 @@ void glShaderWindow::deleteSkyboxTexture() {
 
 void glShaderWindow::reloadGroundShader(){
 
-    std::cout << "reload" << std::endl ;
     ground_vertexBuffer.release();
     ground_vertexBuffer.destroy();
     ground_indexBuffer.release();
