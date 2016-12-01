@@ -16,6 +16,10 @@ out vec4 fragColor;
 void main( void )
 {
 
+	vec4 normNormals = vec4(normalize(vertNormal),0.0) ;
+    vec4 normLightVector = normalize(lightVector); 
+    vec4 normEyeVector = normalize(eyeVector) ; 
+
     vec4 vertColor = texture2D(colorTexture, textCoords);
     vec4 ambiant = 0.2 * vertColor * lightIntensity ;
     vec4 diffuse = 0.4 * vertColor * max(dot(normNormals,normLightVector), 0) * lightIntensity;

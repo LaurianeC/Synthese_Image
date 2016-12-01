@@ -834,7 +834,6 @@ void glShaderWindow::loadTexturesForShaders() {
             normalMap->setMinificationFilter(QOpenGLTexture::Linear);
             normalMap->bind(1);
             m_program->setUniformValue("earthNormals", 1);
-	    std::cout << "NORMAL MAP" << std::endl;
         }
     } else {
         if ((m_program->uniformLocation("colorTexture") != -1) || (ground_program->uniformLocation("colorTexture") != -1)) {
@@ -917,14 +916,14 @@ void glShaderWindow::initialize()
         m_program->release();
         delete(m_program);
     }
-    m_program = prepareShaderProgram(":/3_textured.vert", ":/3_textured.frag");
+    m_program = prepareShaderProgram(":/2_phong.vert", ":/2_phong.frag");
 
     if (ground_program) {
         ground_program->release();
         delete(ground_program);
     }
 
-    ground_program = prepareShaderProgram(":/shadow.vert", ":/shadow.frag");
+    ground_program = prepareShaderProgram(":/2_phong.vert", ":/2_phong.frag");
 
     if (skybox_program) {
         std::cout << "delete skybox program" << std::endl ;
