@@ -837,6 +837,15 @@ void glShaderWindow::loadTexturesForShaders() {
         delete texture;
         texture = 0;
     }
+
+    if (skyboxTexture) {
+        glActiveTexture(GL_TEXTURE0);
+        skyboxTexture->release();
+        skyboxTexture->destroy();
+        delete skyboxTexture;
+        skyboxTexture = 0;
+    } 
+
     if (permTexture) {
         glActiveTexture(GL_TEXTURE1);
         permTexture->release();
@@ -863,6 +872,7 @@ void glShaderWindow::loadTexturesForShaders() {
 
 
     if (m_program->uniformLocation("earthDay") != -1) {
+      std::cout << "EARTH DAY" << std::endl;
         // the shader is about the earth. We load the related textures (day + relief)
         glActiveTexture(GL_TEXTURE0);
 	texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth1.png"));
@@ -1264,7 +1274,6 @@ void glShaderWindow::render()
     QMatrix4x4 lightPerspective;
 
     if ((ground_program->uniformLocation("shadowMap") != -1) || (m_program->uniformLocation("shadowMap") != -1) ){
-
         glActiveTexture(GL_TEXTURE2);
         glViewport(0, 0, shadowMapDimension, shadowMapDimension);
         // The shader wants a shadow map.
