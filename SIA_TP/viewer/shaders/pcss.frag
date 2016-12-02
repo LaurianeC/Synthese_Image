@@ -6,7 +6,7 @@ uniform float shininess;
 uniform float eta;
 uniform sampler2D shadowMap;
 uniform float bias;
-//uniform float lightSize;
+uniform float lightSize;
 
 in vec4 eyeVector;
 in vec4 lightVector;
@@ -45,7 +45,7 @@ void main( void )
 
     //Bias
     //float bias = max(0.05 * (1.0 - dot(normNormals,normLightVector)), 0.005);  
-    float lightSize = 0.01;
+    //float lightSize = 0.01;
     //Calcul de zavg
     int n = 3;
     float zavg = 0;
@@ -63,7 +63,7 @@ void main( void )
     //PCF
     int x,y;
     pas  = 1.0/512.0;
-    int nSamples = penumbraSize / pas + 1;
+    int nSamples = int(penumbraSize / pas + 1);
     nSamples = (nSamples - 1)/2;
     for (y=-nSamples; y <=nSamples; y++) {
     	for (x=-nSamples; x <=nSamples; x++) {

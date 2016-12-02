@@ -54,6 +54,12 @@ public slots:
     void updateEta(int etaSliderValue);
     void updateNSamples(int nSamplesSliderValue);
     void updateBias(int biasSliderValue);
+    void updateRoughness(int rough) ;
+    void updateSize(int sizeL) ;
+
+
+    void handleNormalTexture(QString txt) ;
+
 
 protected:
     void mousePressEvent(QMouseEvent *e);
@@ -85,6 +91,9 @@ private:
     QString  envMapName;
     QString groundVertShader = QString(":/2_phong.vert");
     QString groundFragShader = QString(":/2_phong.frag");
+    QString normalTexture = QString("../textures/earth1.png");
+    QString normalNormals = QString("../textures/earth3.png") ;
+
     trimesh::TriMesh* modelMesh;
     uchar* pixels;
     // Ground
@@ -111,7 +120,9 @@ private:
 
     float eta;
     int nSamples_softShadow;
+    float rough;
     float bias;
+    float size = 0.5;
     float lightIntensity;
     float shininess;
     float lightDistance;

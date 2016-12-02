@@ -32,5 +32,7 @@
 	<file>skybox.frag</file>
 	<file>glossy.vert</file>
 	<file>glossy.frag</file>
+	<file>pcss.vert</file>
+	<file>pcss.frag</file>
     </qresource>
 </RCC>

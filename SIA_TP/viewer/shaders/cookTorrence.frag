@@ -1,13 +1,15 @@
 #version 410
 
+uniform float roughness ;
 in vec3 lightVector ; 
 in vec3 eyeVector ; 
 in vec3 vertNormal ; 
+in vec4 vertColor ;
 
 void main()
 {
     // set important material values
-    float roughnessValue = 0.3; // 0 : smooth, 1: rough
+    float roughnessValue = roughness; // 0 : smooth, 1: rough
     float F0 = 0.8; // fresnel reflectance at normal incidence
     float k = 0.2; // fraction of diffuse reflection (specular reflection = 1 - k)
     vec3 lightColor = vec3(0.9, 0.1, 0.1);

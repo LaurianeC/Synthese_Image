@@ -259,6 +259,18 @@ void glShaderWindow::updateBias(int biasSliderValue)
     renderNow();
 }
 
+void glShaderWindow::updateSize(int sizeSliderValue)
+{
+    size = sizeSliderValue/10;
+    std::cout << size << std::endl ;
+    renderNow();
+}
+
+void glShaderWindow::updateRoughness(int roughValue) {
+    rough = roughValue / 100.0 ;
+    renderNow() ;
+}
+
 void glShaderWindow::showAuxWindow()
 {
     if (auxWidget)
@@ -316,7 +328,7 @@ void glShaderWindow::showAuxWindow()
     QSlider* lightSlider = new QSlider(Qt::Horizontal);
     lightSlider->setTickPosition(QSlider::TicksBelow);
     lightSlider->setMinimum(0);
-    lightSlider->setMaximum(200);
+    lightSlider->setMaximum(500);
     lightSlider->setSliderPosition(100*lightIntensity);
     connect(lightSlider,SIGNAL(valueChanged(int)),this,SLOT(updateLightIntensity(int)));
     QLabel* lightLabel = new QLabel("Light intensity = ");
@@ -382,6 +394,24 @@ void glShaderWindow::showAuxWindow()
     outer->addLayout(hboxNSamples);
     outer->addWidget(softShadowSlider);
 
+    // Size of light source for PCSS
+    QSlider* sizeSlider = new QSlider(Qt::Horizontal);
+    sizeSlider->setTickPosition(QSlider::TicksBelow);
+    sizeSlider->setTickInterval(5);
+    sizeSlider->setMinimum(0);
+    sizeSlider->setMaximum(100);
+    sizeSlider->setSliderPosition(size);
+    connect(sizeSlider,SIGNAL(valueChanged(int)),this,SLOT(updateSize(int)));
+    QLabel* sizeLabel = new QLabel("Size of light source for PCSS =");
+    QLabel* sizeLabelValue = new QLabel();
+    sizeLabelValue->setNum(size*100);
+    connect(sizeSlider,SIGNAL(valueChanged(int)),sizeLabelValue,SLOT(setNum(int)));
+    QHBoxLayout *hboxSize= new QHBoxLayout;
+    hboxSize->addWidget(sizeLabel);
+    hboxSize->addWidget(sizeLabelValue);
+    outer->addLayout(hboxSize);
+    outer->addWidget(sizeSlider);
+
     // Bias slider
     QSlider* biasSlider = new QSlider(Qt::Horizontal);
     biasSlider->setTickPosition(QSlider::TicksBelow);
@@ -400,8 +430,24 @@ void glShaderWindow::showAuxWindow()
     outer->addLayout(hboxBias);
     outer->addWidget(biasSlider);
 
-    auxWidget->setLayout(outer);
-    auxWidget->show();
+    //Cook-Torrence roughness
+    QSlider* roughSlider = new QSlider(Qt::Horizontal);
+    roughSlider->setTickPosition(QSlider::TicksBelow);
+    roughSlider->setTickInterval(5);
+    roughSlider->setMinimum(0);
+    roughSlider->setMaximum(100);
+    roughSlider->setSliderPosition(rough);
+    connect(roughSlider,SIGNAL(valueChanged(int)),this,SLOT(updateRoughness(int)));
+    QLabel* roughLabel = new QLabel("Roughness for Cook-Torrence * 100 (Smooth = 0, Rough = 100) =");
+    QLabel* roughLabelValue = new QLabel();
+    roughLabelValue->setNum(rough*1000);
+    connect(roughSlider,SIGNAL(valueChanged(int)),roughLabelValue,SLOT(setNum(int)));
+    QHBoxLayout *hboxRough= new QHBoxLayout;
+    hboxRough->addWidget(roughLabel);
+    hboxRough->addWidget(roughLabelValue);
+    outer->addLayout(hboxRough);
+    outer->addWidget(roughSlider);
+
 
 
     //Demonstrations
@@ -409,11 +455,25 @@ void glShaderWindow::showAuxWindow()
    ground_shader->addItem("Choix du shader pour le sol");
    ground_shader->addItem("Soft Shadows");
    ground_shader->addItem("Hard Shadows");
+   ground_shader->addItem("PCSS Shadows");
    ground_shader->addItem("Phong");
    connect(ground_shader, SIGNAL(currentTextChanged(QString)), this, SLOT(handleGroundShader(QString))) ;
    QHBoxLayout* hboxGroundShader = new QHBoxLayout ;
    hboxGroundShader->addWidget(ground_shader);
    outer->addLayout(hboxGroundShader);
+
+   QComboBox* normalText  = new QComboBox() ;
+   normalText->addItem("Choix de la texture pour le normal mapping");
+   normalText->addItem("Earth");
+   normalText->addItem("Alloy Diamond");
+   connect(normalText, SIGNAL(currentTextChanged(QString)), this, SLOT(handleNormalTexture(QString))) ;
+   QHBoxLayout* hboxNormalTexture = new QHBoxLayout ;
+   hboxNormalTexture->addWidget(normalText);
+   outer->addLayout(hboxNormalTexture);
+
+   auxWidget->setLayout(outer);
+   auxWidget->show();
+
 
 }
 
@@ -428,12 +488,28 @@ void glShaderWindow::handleGroundShader(QString currentText) {
     }
     if(currentText == "Hard Shadows") {
         groundVertShader = ":/shadow.vert";
-
         groundFragShader = ":/shadow.frag";
+    }
+    if(currentText == "PCSS Shadows") {
+        groundVertShader = ":/pcss.vert";
+        groundFragShader = ":/pcss.frag";
     }
     reloadGroundShader();
 }
 
+
+void glShaderWindow::handleNormalTexture(QString currentText) {
+    if (currentText == "Earth") {
+        normalTexture = "../textures/earth1.png";
+        normalNormals = "../textures/earth3.png";
+    }
+    if(currentText == "Alloy Diamond") {
+        normalTexture = "../textures/Alloy_diamond.png";
+        normalNormals = "../textures/Alloy_diamond_normal.png";
+    }
+    loadTexturesForShaders();
+    renderNow();
+}
 
 void glShaderWindow::bindSceneToProgram()
 {
@@ -875,8 +951,10 @@ void glShaderWindow::loadTexturesForShaders() {
       std::cout << "EARTH DAY" << std::endl;
         // the shader is about the earth. We load the related textures (day + relief)
         glActiveTexture(GL_TEXTURE0);
-	texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth1.png"));
-        //texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/Panda.png"));
+        //texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth1.png"));
+        //texture = new QOpenGLTexture(QImage(workingDirectory + "../textures/Alloy_diamond.png"));
+        texture = new QOpenGLTexture(QImage(workingDirectory + normalTexture));
+
         if (texture) {
             std::cout << "texture" << std::endl ;
 
@@ -887,8 +965,9 @@ void glShaderWindow::loadTexturesForShaders() {
             m_program->setUniformValue("earthDay", 0);
         }
         glActiveTexture(GL_TEXTURE1);
-	normalMap = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth3.png"));
-        //normalMap = new QOpenGLTexture(QImage(workingDirectory + "../textures/Panda_normals.png"));
+        //normalMap = new QOpenGLTexture(QImage(workingDirectory + "../textures/earth3.png"));
+
+        normalMap = new QOpenGLTexture(QImage(workingDirectory + normalNormals));
         if (normalMap) {
             std::cout << "normal map" << std::endl ;
             normalMap->setWrapMode(QOpenGLTexture::MirroredRepeat);
@@ -1354,6 +1433,8 @@ void glShaderWindow::render()
     m_program->setUniformValue("eta", eta);
     m_program->setUniformValue("nSamples_softShadow", nSamples_softShadow);
     m_program->setUniformValue("bias", bias);
+    m_program->setUniformValue("lightSize", size);
+    m_program->setUniformValue("roughness", rough);
     m_program->setUniformValue("radius", modelMesh->bsphere.r);
     // Shadow Mapping
     if (m_program->uniformLocation("shadowMap") != -1) {
